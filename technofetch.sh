@@ -183,24 +183,56 @@ detect_distro() {
     DISTRO_VERSION=""
     DISTRO_CODENAME=""
     DISTRO_FAMILY="Debian"
+    DISTRO_ID=""
 
+    # ── Primary: /etc/os-release (standard on all modern distros)
     if [[ -f /etc/os-release ]]; then
         # shellcheck disable=SC1091
         source /etc/os-release
         DISTRO_NAME="${PRETTY_NAME:-${NAME} ${VERSION}}"
         DISTRO_VERSION="${VERSION_ID:-}"
         DISTRO_CODENAME="${VERSION_CODENAME:-}"
+        DISTRO_ID="${ID:-}"
+    # ── Fallback: /etc/lsb-release (older Ubuntu)
     elif [[ -f /etc/lsb-release ]]; then
         # shellcheck disable=SC1091
         source /etc/lsb-release
         DISTRO_NAME="${DISTRIB_DESCRIPTION:-$DISTRIB_ID $DISTRIB_RELEASE}"
         DISTRO_VERSION="${DISTRIB_RELEASE:-}"
         DISTRO_CODENAME="${DISTRIB_CODENAME:-}"
+        DISTRO_ID="${DISTRIB_ID:-}"
+    # ── Fallback: /etc/debian_version (pure Debian)
+    elif [[ -f /etc/debian_version ]]; then
+        local deb_ver
+        deb_ver=$(cat /etc/debian_version 2>/dev/null || echo "")
+        DISTRO_NAME="Debian ${deb_ver}"
+        DISTRO_VERSION="${deb_ver}"
+        DISTRO_ID="debian"
+    # ── Fallback: parse /etc/issue (very old systems)
+    elif [[ -f /etc/issue ]]; then
+        DISTRO_NAME=$(head -1 /etc/issue 2>/dev/null | sed 's/\\[a-z]//gi' | xargs || echo "Unknown Linux")
+    # ── Fallback: use lsb_release command
+    elif has_cmd lsb_release; then
+        DISTRO_NAME=$(lsb_release -ds 2>/dev/null || echo "Unknown Linux")
+        DISTRO_VERSION=$(lsb_release -rs 2>/dev/null || echo "")
+        DISTRO_CODENAME=$(lsb_release -cs 2>/dev/null || echo "")
+        DISTRO_ID=$(lsb_release -is 2>/dev/null || echo "")
     fi
 
-    # Detect Debian derivative chain
+    # ── Detect Debian/Ubuntu family
     if [[ -f /etc/debian_version ]]; then
         DISTRO_FAMILY="Debian"
+    elif [[ -n "$DISTRO_ID" ]]; then
+        case "$DISTRO_ID" in
+            ubuntu|debian|linuxmint|pop|elementary|zorin|kali|parrot|raspbian|armbian|devuan)
+                DISTRO_FAMILY="Debian" ;;
+            *)
+                # Check if derivative info exists
+                if [[ -n "${ID_LIKE:-}" ]] && echo "$ID_LIKE" | grep -qi debian; then
+                    DISTRO_FAMILY="Debian"
+                fi
+                ;;
+        esac
     fi
 }
 
@@ -218,7 +250,7 @@ detect_vm() {
     CLOUD_PROVIDER=""
     CLOUD_INSTANCE=""
 
-    # ── systemd-detect-virt (most reliable on modern systems)
+    # ── Method 1: systemd-detect-virt (most reliable on modern systemd systems)
     if has_cmd systemd-detect-virt; then
         local virt_type
         virt_type=$(systemd-detect-virt 2>/dev/null || true)
@@ -228,22 +260,49 @@ detect_vm() {
         fi
     fi
 
-    # ── DMI / SMBIOS data (works even without tools)
-    local dmi_vendor dmi_product dmi_family dmi_serial
-    dmi_vendor=$(cat /sys/devices/virtual/dmi/id/sys_vendor 2>/dev/null || cat /sys/class/dmi/id/sys_vendor 2>/dev/null || echo "")
-    dmi_product=$(cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null || cat /sys/class/dmi/id/product_name 2>/dev/null || echo "")
-    dmi_family=$(cat /sys/devices/virtual/dmi/id/product_family 2>/dev/null || echo "")
-    dmi_serial=$(cat /sys/devices/virtual/dmi/id/product_serial 2>/dev/null || echo "")
+    # ── Method 2: DMI / SMBIOS data from sysfs
+    local dmi_vendor="" dmi_product="" dmi_family="" dmi_serial=""
+    # Try multiple sysfs paths (differs between distros)
+    for dmi_path in /sys/devices/virtual/dmi/id /sys/class/dmi/id; do
+        if [[ -d "$dmi_path" ]]; then
+            [[ -z "$dmi_vendor" ]] && dmi_vendor=$(cat "${dmi_path}/sys_vendor" 2>/dev/null || echo "")
+            [[ -z "$dmi_product" ]] && dmi_product=$(cat "${dmi_path}/product_name" 2>/dev/null || echo "")
+            [[ -z "$dmi_family" ]] && dmi_family=$(cat "${dmi_path}/product_family" 2>/dev/null || echo "")
+            [[ -z "$dmi_serial" ]] && dmi_serial=$(cat "${dmi_path}/product_serial" 2>/dev/null || echo "")
+            [[ -z "$VM_UUID" || "$VM_UUID" == "Protected" ]] && VM_UUID=$(cat "${dmi_path}/product_uuid" 2>/dev/null || echo "Protected")
+        fi
+    done
     VM_MANUFACTURER="$dmi_vendor"
     VM_PRODUCT="$dmi_product"
     VM_NAME="$dmi_family"
-    VM_UUID=$(cat /sys/devices/virtual/dmi/id/product_uuid 2>/dev/null || echo "Protected")
 
-    # ── Detect specific hypervisors from DMI
+    # ── Method 3: dmidecode command (if available, works on bare metal and VMs)
+    if has_cmd dmidecode && [[ "$IS_VM" == "false" ]]; then
+        local dmi_out
+        dmi_out=$(dmidecode -t system 2>/dev/null || echo "")
+        if [[ -n "$dmi_out" ]]; then
+            [[ -z "$VM_MANUFACTURER" ]] && VM_MANUFACTURER=$(echo "$dmi_out" | grep -i "Manufacturer:" | head -1 | awk -F: '{print $2}' | xargs || echo "")
+            [[ -z "$VM_PRODUCT" ]] && VM_PRODUCT=$(echo "$dmi_out" | grep -i "Product Name:" | head -1 | awk -F: '{print $2}' | xargs || echo "")
+            [[ -z "$VM_NAME" ]] && VM_NAME=$(echo "$dmi_out" | grep -i "Family:" | head -1 | awk -F: '{print $2}' | xargs || echo "")
+            [[ "$VM_UUID" == "Protected" ]] && VM_UUID=$(echo "$dmi_out" | grep -i "UUID:" | head -1 | awk -F: '{print $2}' | xargs || echo "Protected")
+        fi
+    fi
+
+    # ── Method 4: lscpu hypervisor field
+    if has_cmd lscpu && [[ "$IS_VM" == "false" ]]; then
+        local lscpu_hyp
+        lscpu_hyp=$(lscpu 2>/dev/null | grep -i "Hypervisor:" | awk -F: '{print $2}' | xargs || echo "")
+        if [[ -n "$lscpu_hyp" ]]; then
+            IS_VM="true"
+            VM_HYPERVISOR="$lscpu_hyp"
+        fi
+    fi
+
+    # ── Method 5: DMI string matching (when we have DMI data but no detection yet)
     local dmi_lower
     dmi_lower=$(echo "${dmi_vendor}${dmi_product}${dmi_family}" | tr '[:upper:]' '[:lower:]')
 
-    if [[ "$IS_VM" == "false" ]]; then
+    if [[ "$IS_VM" == "false" && -n "$dmi_lower" ]]; then
         if echo "$dmi_lower" | grep -qi "vmware\|vmx"; then
             IS_VM="true"; VM_HYPERVISOR="VMware"
         elif echo "$dmi_lower" | grep -qi "virtualbox\|vbox"; then
@@ -258,18 +317,135 @@ detect_vm() {
             IS_VM="true"; VM_HYPERVISOR="Parallels"
         elif echo "$dmi_lower" | grep -qi "oracle\|virtual machine"; then
             IS_VM="true"; VM_HYPERVISOR="VirtualBox"
+        elif echo "$dmi_lower" | grep -qi "digitalocean"; then
+            IS_VM="true"; VM_HYPERVISOR="KVM/QEMU"
+        elif echo "$dmi_lower" | grep -qi "alibaba\|aliyun"; then
+            IS_VM="true"; VM_HYPERVISOR="KVM/QEMU"
+        elif echo "$dmi_lower" | grep -qi "amazon\|amazon ec2"; then
+            IS_VM="true"; VM_HYPERVISOR="KVM (Nitro)"
+        elif echo "$dmi_lower" | grep -qi "google"; then
+            IS_VM="true"; VM_HYPERVISOR="KVM (Google)"
+        elif echo "$dmi_lower" | grep -qi "openstack"; then
+            IS_VM="true"; VM_HYPERVISOR="KVM (OpenStack)"
+        elif echo "$dmi_lower" | grep -qi "cloud"; then
+            IS_VM="true"; VM_HYPERVISOR="Cloud VM"
         fi
     fi
 
-    # ── Check /proc/cpuinfo flags for hypervisor presence
+    # ── Method 6: /proc/cpuinfo hypervisor flag (works on most VMs)
     if [[ "$IS_VM" == "false" && -r /proc/cpuinfo ]]; then
         if grep -qi "hypervisor" /proc/cpuinfo 2>/dev/null; then
             IS_VM="true"
-            VM_HYPERVISOR="Unknown Hypervisor"
+            # Try to identify which hypervisor from CPU model
+            local cpu_model_lower
+            cpu_model_lower=$(grep -m1 "model name" /proc/cpuinfo 2>/dev/null | awk -F: '{print tolower($2)}' || echo "")
+            if echo "$cpu_model_lower" | grep -qi "qemu"; then
+                VM_HYPERVISOR="KVM/QEMU"
+            elif echo "$cpu_model_lower" | grep -qi "virtualbox"; then
+                VM_HYPERVISOR="VirtualBox"
+            elif echo "$cpu_model_lower" | grep -qi "vmware"; then
+                VM_HYPERVISOR="VMware"
+            else
+                VM_HYPERVISOR="Unknown Hypervisor"
+            fi
         fi
     fi
 
-    # ── Detect CPU virtualization features
+    # ── Method 7: /proc/version string (identifies VMware, KVM, Hyper-V)
+    if [[ "$IS_VM" == "false" && -r /proc/version ]]; then
+        local proc_ver
+        proc_ver=$(cat /proc/version 2>/dev/null || echo "")
+        local proc_ver_lower=$(echo "$proc_ver" | tr '[:upper:]' '[:lower:]')
+        if echo "$proc_ver_lower" | grep -qi "microsoft"; then
+            IS_VM="true"
+            VM_HYPERVISOR="Hyper-V (WSL)"
+        elif echo "$proc_ver_lower" | grep -qi "vmware"; then
+            IS_VM="true"
+            VM_HYPERVISOR="VMware"
+        elif echo "$proc_ver_lower" | grep -qi "kvm"; then
+            IS_VM="true"
+            VM_HYPERVISOR="KVM"
+        fi
+    fi
+
+    # ── Method 8: /sys/hypervisor/type (Xen, some KVM)
+    if [[ "$IS_VM" == "false" && -r /sys/hypervisor/type ]]; then
+        local hyp_type
+        hyp_type=$(cat /sys/hypervisor/type 2>/dev/null || echo "")
+        if [[ -n "$hyp_type" ]]; then
+            IS_VM="true"
+            case "$hyp_type" in
+                xen)    VM_HYPERVISOR="Xen" ;;
+                kvm)    VM_HYPERVISOR="KVM" ;;
+                *)      VM_HYPERVISOR="$hyp_type" ;;
+            esac
+        fi
+    fi
+
+    # ── Method 9: /proc/xen directory presence (Xen)
+    if [[ "$IS_VM" == "false" && -d /proc/xen ]]; then
+        IS_VM="true"
+        VM_HYPERVISOR="Xen"
+    fi
+
+    # ── Method 10: Virtio device presence (strong KVM/QEMU indicator)
+    if [[ "$IS_VM" == "false" && -d /sys/bus/virtio ]]; then
+        local virtio_count
+        virtio_count=$(ls /sys/bus/virtio/devices/ 2>/dev/null | wc -l || echo "0")
+        if (( virtio_count > 0 )); then
+            IS_VM="true"
+            VM_HYPERVISOR="KVM/QEMU (virtio)"
+        fi
+    fi
+
+    # ── Method 11: Cloud-init presence (most cloud VMs have this)
+    if [[ "$IS_VM" == "false" ]]; then
+        if [[ -f /run/cloud-init/instance-data.json ]] || \
+           [[ -f /var/lib/cloud/instance/instance-id ]] || \
+           [[ -d /var/lib/cloud/data ]]; then
+            IS_VM="true"
+            VM_HYPERVISOR="Cloud VM"
+        fi
+    fi
+
+    # ── Method 12: VMware tools / VirtualBox Guest Additions
+    if [[ "$IS_VM" == "false" ]]; then
+        if has_cmd vmware-toolbox-cmd || [[ -f /usr/bin/vmware-guestinfo ]] || \
+           [[ -d /usr/lib/vmware-tools ]]; then
+            IS_VM="true"; VM_HYPERVISOR="VMware"
+        elif has_cmd VBoxClient || [[ -f /usr/bin/VBoxClient ]] || \
+             [[ -d /usr/lib/VirtualBoxGuestAdditions ]]; then
+            IS_VM="true"; VM_HYPERVISOR="VirtualBox"
+        fi
+    fi
+
+    # ── Method 13: Check /sys/devices/virtual/dmi/id for ANY file content
+    #    On some VPS (e.g., Vultr, Hetzner) DMI exists but has VM info
+    if [[ "$IS_VM" == "false" && -d /sys/devices/virtual/dmi/id ]]; then
+        local dmi_all
+        dmi_all=$(cat /sys/devices/virtual/dmi/id/* 2>/dev/null | tr '[:upper:]' '[:lower:]' || echo "")
+        if echo "$dmi_all" | grep -qi "kvm\|qemu\|vmware\|virtualbox\|xen\|hyper\|parallels\|openstack\|nitro"; then
+            IS_VM="true"
+            if echo "$dmi_all" | grep -qi "kvm\|qemu"; then VM_HYPERVISOR="KVM/QEMU"
+            elif echo "$dmi_all" | grep -qi "vmware"; then VM_HYPERVISOR="VMware"
+            elif echo "$dmi_all" | grep -qi "virtualbox"; then VM_HYPERVISOR="VirtualBox"
+            elif echo "$dmi_all" | grep -qi "xen"; then VM_HYPERVISOR="Xen"
+            elif echo "$dmi_all" | grep -qi "hyper"; then VM_HYPERVISOR="Hyper-V"
+            elif echo "$dmi_all" | grep -qi "nitro"; then VM_HYPERVISOR="KVM (AWS Nitro)"
+            else VM_HYPERVISOR="Cloud VM"
+            fi
+        fi
+    fi
+
+    # ── Method 14: Check systemd virtualization with broader patterns
+    if [[ "$IS_VM" == "false" ]]; then
+        if [[ -f /run/systemd/container ]]; then
+            IS_CONTAINER="true"
+            CONTAINER_TYPE=$(cat /run/systemd/container 2>/dev/null || echo "OCI")
+        fi
+    fi
+
+    # ── Detect CPU virtualization features (informational, not detection)
     VIRT_FLAGS=""
     if [[ -r /proc/cpuinfo ]]; then
         local flags_line
@@ -283,7 +459,7 @@ detect_vm() {
         VIRT_FLAGS="$virt_features"
     fi
 
-    # ── Container detection
+    # ── Container detection (runs AFTER VM detection — a container can be inside a VM)
     if [[ -f /.dockerenv ]]; then
         IS_CONTAINER="true"
         CONTAINER_TYPE="Docker"
@@ -316,7 +492,7 @@ detect_vm() {
         fi
     fi
 
-    # ── Cloud provider detection
+    # ── Cloud provider detection (runs after VM detection)
     detect_cloud
 }
 
