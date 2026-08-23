@@ -10,27 +10,58 @@ set -u
 VERSION="2.0.0"
 
 # ─── COLOR PALETTE ──────────────────────────────────────────────────────────
+# Using 256-color mode for vibrant, powerful display
 C_RESET=$'\033[0m'
 C_BOLD=$'\033[1m'
 C_DIM=$'\033[2m'
 C_UNDERLINE=$'\033[4m'
+C_ITALIC=$'\033[3m'
 
-# Neofetch-style colors
-C_RED=$'\033[1;31m'
-C_GREEN=$'\033[1;32m'
-C_YELLOW=$'\033[1;33m'
-C_BLUE=$'\033[1;34m'
-C_MAGENTA=$'\033[1;35m'
-C_CYAN=$'\033[1;36m'
-C_WHITE=$'\033[1;37m'
-C_GRAY=$'\033[0;37m'
+# ── Core colors (256-color for vibrancy) ──
+C_RED=$'\033[38;5;196m'          # Bright vivid red
+C_GREEN=$'\033[38;5;46m'        # Bright vivid green
+C_YELLOW=$'\033[38;5;226m'      # Bright vivid yellow
+C_BLUE=$'\033[38;5;39m'         # Bright vivid blue
+C_MAGENTA=$'\033[38;5;201m'     # Bright vivid magenta/pink
+C_CYAN=$'\033[38;5;51m'         # Bright vivid cyan/aqua
+C_WHITE=$'\033[38;5;231m'       # Pure bright white
+C_GRAY=$'\033[38;5;245m'        # Medium gray
+
+# ── Bright accent colors ──
+C_ORANGE=$'\033[38;5;208m'      # Bright orange
+C_PINK=$'\033[38;5;213m'        # Hot pink
+C_LIME=$'\033[38;5;118m'        # Bright lime green
+C_LAVENDER=$'\033[38;5;141m'    # Soft lavender
+C_GOLD=$'\033[38;5;220m'        # Bright gold
+C_TEAL=$'\033[38;5;37m'         # Deep teal
+C_CORAL=$'\033[38;5;203m'       # Coral/salmon
+C_SKY=$'\033[38;5;117m'         # Sky blue
+
+# ── Section header colors (vivid backgrounds) ──
+C_SEC_KERNEL=$'\033[38;5;75m'    # Soft blue for kernel
+C_SEC_CPU=$'\033[38;5;213m'     # Pink for CPU
+C_SEC_MEM=$'\033[38;5;46m'      # Green for memory
+C_SEC_DISK=$'\033[38;5;208m'    # Orange for disk
+C_SEC_NET=$'\033[38;5;39m'      # Blue for network
+C_SEC_GPU=$'\033[38;5;141m'     # Lavender for GPU
+C_SEC_PKG=$'\033[38;5;220m'     # Gold for packages
+C_SEC_SEC=$'\033[38;5;196m'     # Red for security
+C_SEC_CLOUD=$'\033[38;5;51m'    # Cyan for cloud
+
+# ── Semantic colors ──
+C_LABEL=$'\033[38;5;75m'        # Labels: soft blue
+C_VALUE=$'\033[38;5;231m'       # Values: bright white
+C_HIGHLIGHT=$'\033[38;5;226m'   # Highlights: bright yellow
+C_GOOD=$'\033[38;5;46m'         # Good status: bright green
+C_WARN=$'\033[38;5;208m'        # Warning: orange
+C_BAD=$'\033[38;5;196m'         # Bad/danger: bright red
 
 # Accent colors for labels
-LABEL_COLOR="${C_CYAN}"
-INFO_COLOR="${C_WHITE}"
+LABEL_COLOR="${C_LABEL}"
+INFO_COLOR="${C_VALUE}"
 SEPARATOR_COLOR="${C_DIM}"
-VM_COLOR="${C_MAGENTA}"
-DISTRO_COLOR="${C_YELLOW}"
+VM_COLOR="${C_PINK}"
+DISTRO_COLOR="${C_GOLD}"
 
 # ─── CONFIGURATION ──────────────────────────────────────────────────────────
 SHOW_ASCII=true
@@ -933,16 +964,17 @@ get_storage_info() {
 
 # ─── DISPLAY FUNCTIONS ─────────────────────────────────────────────────────
 
+# Row 1: Standard vivid colors (256-color backgrounds)
 print_color_blocks() {
     local blocks=()
-    blocks+=($'\033[40m')   # Black
-    blocks+=($'\033[41m')   # Red
-    blocks+=($'\033[42m')   # Green
-    blocks+=($'\033[43m')   # Yellow
-    blocks+=($'\033[44m')   # Blue
-    blocks+=($'\033[45m')   # Magenta
-    blocks+=($'\033[46m')   # Cyan
-    blocks+=($'\033[47m')   # White
+    blocks+=($'\033[48;5;16m')   # Dark gray (black)
+    blocks+=($'\033[48;5;196m')  # Vivid red
+    blocks+=($'\033[48;5;46m')   # Vivid green
+    blocks+=($'\033[48;5;226m')  # Vivid yellow
+    blocks+=($'\033[48;5;39m')   # Vivid blue
+    blocks+=($'\033[48;5;201m')  # Vivid magenta
+    blocks+=($'\033[48;5;51m')   # Vivid cyan
+    blocks+=($'\033[48;5;231m')  # Pure white
 
     printf "  "
     for block in "${blocks[@]}"; do
@@ -951,16 +983,17 @@ print_color_blocks() {
     echo ""
 }
 
+# Row 2: Bright / high-intensity colors
 print_color_blocks_2() {
     local blocks=()
-    blocks+=($'\033[100m')  # Bright Black
-    blocks+=($'\033[101m')  # Bright Red
-    blocks+=($'\033[102m')  # Bright Green
-    blocks+=($'\033[103m')  # Bright Yellow
-    blocks+=($'\033[104m')  # Bright Blue
-    blocks+=($'\033[105m')  # Bright Magenta
-    blocks+=($'\033[106m')  # Bright Cyan
-    blocks+=($'\033[107m')  # Bright White
+    blocks+=($'\033[48;5;240m')  # Dark gray
+    blocks+=($'\033[48;5;208m')  # Bright orange
+    blocks+=($'\033[48;5;118m')  # Bright lime
+    blocks+=($'\033[48;5;220m')  # Bright gold
+    blocks+=($'\033[48;5;75m')   # Soft blue
+    blocks+=($'\033[48;5;213m')  # Hot pink
+    blocks+=($'\033[48;5;117m')  # Sky blue
+    blocks+=($'\033[48;5;255m')  # Bright white
 
     printf "  "
     for block in "${blocks[@]}"; do
@@ -1031,174 +1064,185 @@ main() {
     # ── Build info lines into array ──
     local info_lines=()
 
-    # Header / System
-    info_lines+=("$(printf "${DISTRO_COLOR}${C_BOLD}%s${C_RESET}" "$DISTRO_NAME")")
+    # ── HEADER ──
+    info_lines+=("$(printf "${C_GOLD}${C_BOLD}%s${C_RESET}" "$DISTRO_NAME")")
 
     # VM status line
     if [[ "$IS_VM" == "true" ]]; then
-        info_lines+=("$(printf "${VM_COLOR}${C_BOLD}⚡ VM: %s${C_RESET}" "$VM_HYPERVISOR")")
+        info_lines+=("$(printf "${C_PINK}${C_BOLD}⚡ VM: %s${C_RESET}" "$VM_HYPERVISOR")")
     else
-        info_lines+=("$(printf "${C_GREEN}⬥ Bare Metal${C_RESET}")")
+        info_lines+=("$(printf "${C_LIME}${C_BOLD}⬥ Bare Metal${C_RESET}")")
     fi
 
     if [[ "$IS_CONTAINER" == "true" ]]; then
-        info_lines+=("$(printf "${C_CYAN}📦 Container: %s${C_RESET}" "$CONTAINER_TYPE")")
+        info_lines+=("$(printf "${C_TEAL}${C_BOLD}📦 Container: %s${C_RESET}" "$CONTAINER_TYPE")")
     fi
 
     info_lines+=("")
 
-    # Kernel
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Kernel" "$KERNEL_RELEASE ($KERNEL_ARCH)")")
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "OS" "$DISTRO_NAME")")
+    # ── KERNEL ──
+    info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Kernel${C_RESET}  ${C_VALUE}%s${C_RESET}" "$KERNEL_RELEASE ($KERNEL_ARCH)")")
+    info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}OS${C_RESET}      ${C_VALUE}%s${C_RESET}" "$DISTRO_NAME")")
     if [[ -n "$DISTRO_CODENAME" ]]; then
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Codename" "$DISTRO_CODENAME")")
+        info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Codename${C_RESET} ${C_SKY}%s${C_RESET}" "$DISTRO_CODENAME")")
     fi
 
     # Host / VM
     if [[ "$IS_VM" == "true" ]]; then
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} ${VM_COLOR}%s${C_RESET}" "Hypervisor" "$VM_HYPERVISOR")")
+        info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Hypervisor${C_RESET} ${C_PINK}${C_BOLD}%s${C_RESET}" "$VM_HYPERVISOR")")
         [[ -n "$VM_MANUFACTURER" && "$VM_MANUFACTURER" != "N/A" ]] && \
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Host/Brand" "$VM_MANUFACTURER $VM_PRODUCT")")
+            info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Host/Brand${C_RESET} ${C_VALUE}%s${C_RESET}" "$VM_MANUFACTURER $VM_PRODUCT")")
         [[ -n "$VM_NAME" && "$VM_NAME" != "N/A" ]] && \
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "VM Name" "$VM_NAME")")
+            info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}VM Name${C_RESET}   ${C_LAVENDER}%s${C_RESET}" "$VM_NAME")")
         if [[ -n "$VIRT_FLAGS" ]]; then
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Virt Features" "$VIRT_FLAGS")")
+            info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Virt${C_RESET}      ${C_TEAL}%s${C_RESET}" "$VIRT_FLAGS")")
         fi
     else
         local hw_vendor hw_product
         hw_vendor=$(read_sysfs "/sys/devices/virtual/dmi/id/board_vendor" "")
         hw_product=$(read_sysfs "/sys/devices/virtual/dmi/id/board_name" "")
         [[ -n "$hw_vendor" ]] && \
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Motherboard" "$hw_vendor $hw_product")")
+            info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Motherboard${C_RESET} ${C_VALUE}%s${C_RESET}" "$hw_vendor $hw_product")")
     fi
 
     info_lines+=("")
 
-    # CPU
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "CPU" "$CPU_MODEL")")
+    # ── CPU ──
+    info_lines+=("$(printf "${C_SEC_CPU}${C_BOLD}CPU${C_RESET}        ${C_VALUE}%s${C_RESET}" "$CPU_MODEL")")
     local cpu_desc="${CPU_CORES_PHYSICAL}C / ${CPU_CORES_LOGICAL}T"
     [[ "$CPU_SOCKETS" -gt 1 ]] && cpu_desc="${CPU_SOCKETS} sockets, ${cpu_desc}"
     [[ "$CPU_MHZ" != "N/A" ]] && cpu_desc="${cpu_desc} @ ${CPU_MHZ} MHz"
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "CPU Config" "$cpu_desc")")
+    info_lines+=("$(printf "${C_SEC_CPU}${C_BOLD}CPU Config${C_RESET} ${C_ORANGE}%s${C_RESET}" "$cpu_desc")")
     [[ -n "$CPU_VIRT" ]] && \
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Virt Capable" "$CPU_VIRT")")
+        info_lines+=("$(printf "${C_SEC_CPU}${C_BOLD}Virt${C_RESET}      ${C_TEAL}%s${C_RESET}" "$CPU_VIRT")")
     [[ "$CPU_CACHE" != "N/A" ]] && \
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Cache" "$CPU_CACHE")")
+        info_lines+=("$(printf "${C_SEC_CPU}${C_BOLD}Cache${C_RESET}     ${C_VALUE}%s${C_RESET}" "$CPU_CACHE")")
 
     info_lines+=("")
 
-    # Memory
+    # ── MEMORY ──
     local mem_used_h mem_total_h mem_pct_str
     mem_total_h=$(awk "BEGIN {printf \"%.1f\", ${MEM_TOTAL}/1048576}")
     mem_used_h=$(awk "BEGIN {printf \"%.1f\", ${MEM_USED}/1048576}")
     mem_pct_str="${MEM_PERCENT}%"
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s ${C_DIM}│${C_RESET} %s / %s MiB" "Memory" "${mem_pct_str}" "$mem_used_h" "$mem_total_h")")
+    # Color the percentage based on usage
+    local mem_color="$C_GOOD"
+    local mem_pct_int=${MEM_PERCENT%.*}
+    (( mem_pct_int > 80 )) && mem_color="$C_BAD"
+    (( mem_pct_int > 60 && mem_pct_int <= 80 )) && mem_color="$C_WARN"
+    info_lines+=("$(printf "${C_SEC_MEM}${C_BOLD}Memory${C_RESET}     ${mem_color}%s${C_RESET} ${C_DIM}│${C_RESET} %s / %s MiB" "${mem_pct_str}" "$mem_used_h" "$mem_total_h")")
 
-    # Memory bar
+    # Memory bar — vivid gradient
     local bar_len=20
     local filled
     filled=$(awk "BEGIN {printf \"%d\", (${MEM_PERCENT}/100)*${bar_len}}")
     local bar=""
+    local bar_pct=$(( filled * 100 / bar_len ))
     for ((i=0; i<bar_len; i++)); do
         if ((i < filled)); then
-            if ((filled * 100 / bar_len > 80)); then
-                bar="${bar}${C_RED}█${C_RESET}"
-            elif ((filled * 100 / bar_len > 60)); then
-                bar="${bar}${C_YELLOW}█${C_RESET}"
+            if ((bar_pct > 80)); then
+                bar="${bar}${C_BAD}${C_BOLD}█${C_RESET}"
+            elif ((bar_pct > 60)); then
+                bar="${bar}${C_WARN}${C_BOLD}█${C_RESET}"
+            elif ((bar_pct > 40)); then
+                bar="${bar}${C_LIME}${C_BOLD}█${C_RESET}"
             else
-                bar="${bar}${C_GREEN}█${C_RESET}"
+                bar="${bar}${C_GOOD}${C_BOLD}█${C_RESET}"
             fi
         else
             bar="${bar}${C_DIM}░${C_RESET}"
         fi
     done
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET}" "")${bar}")
+    info_lines+=("$(printf "${C_SEC_MEM}            ${C_RESET}")${bar}")
 
     if (( SWAP_TOTAL > 0 )); then
         local swap_h
         swap_h=$(awk "BEGIN {printf \"%.1f\", ${SWAP_USED}/1048576}")
         local swap_total_h
         swap_total_h=$(awk "BEGIN {printf \"%.1f\", ${SWAP_TOTAL}/1048576}")
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s / %s MiB" "Swap" "$swap_h" "$swap_total_h")")
+        info_lines+=("$(printf "${C_SEC_MEM}${C_BOLD}Swap${C_RESET}       ${C_SKY}%s${C_RESET} / %s MiB" "$swap_h" "$swap_total_h")")
     fi
 
     info_lines+=("")
 
-    # Disk
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s / %s (${DISK_PERCENT}%% used)" "Disk (/)" "$DISK_USED" "$DISK_TOTAL")")
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Filesystem" "${ROOT_FS_TYPE}")")
+    # ── DISK ──
+    local disk_color="$C_GOOD"
+    (( DISK_PERCENT > 80 )) && disk_color="$C_BAD"
+    (( DISK_PERCENT > 60 && DISK_PERCENT <= 80 )) && disk_color="$C_WARN"
+    info_lines+=("$(printf "${C_SEC_DISK}${C_BOLD}Disk (/)${C_RESET}    ${disk_color}%s${C_RESET} / %s (${DISK_PERCENT}%% used)" "$DISK_USED" "$DISK_TOTAL")")
+    info_lines+=("$(printf "${C_SEC_DISK}${C_BOLD}Filesystem${C_RESET} ${C_VALUE}%s${C_RESET}" "${ROOT_FS_TYPE}")")
 
     if [[ "$IS_VM" == "true" ]]; then
         [[ "$VIRT_DISK_DRIVER" != "N/A" ]] && \
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} ${VM_COLOR}%s${C_RESET}" "Disk Driver" "$VIRT_DISK_DRIVER")")
+            info_lines+=("$(printf "${C_SEC_DISK}${C_BOLD}Disk Driver${C_RESET} ${C_ORANGE}%s${C_RESET}" "$VIRT_DISK_DRIVER")")
     fi
 
     info_lines+=("")
 
-    # Network
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Network" "$PRIMARY_IFACE ($PRIMARY_IP)")")
+    # ── NETWORK ──
+    info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}Network${C_RESET}   ${C_VALUE}%s${C_RESET} (${C_SKY}%s${C_RESET})" "$PRIMARY_IFACE" "$PRIMARY_IP")")
     if [[ "$PRIMARY_MAC" != "N/A" ]]; then
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "MAC" "$PRIMARY_MAC")")
+        info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}MAC${C_RESET}        ${C_GRAY}%s${C_RESET}" "$PRIMARY_MAC")")
     fi
     if [[ "$PRIMARY_SPEED" != "N/A" && "$PRIMARY_SPEED" != "-1" ]]; then
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s Mbps" "Link Speed" "$PRIMARY_SPEED")")
+        info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}Link Speed${C_RESET} ${C_LIME}%s${C_RESET} Mbps" "$PRIMARY_SPEED")")
     fi
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} ↑ %s  ↓ %s" "Traffic" \
+    info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}Traffic${C_RESET}   ${C_GOOD}↑ %s${C_RESET}  ${C_CORAL}↓ %s${C_RESET}" \
         "$(human_size "$NET_TX_BYTES")" "$(human_size "$NET_RX_BYTES")")")
     if [[ "$DNS_SERVERS" != "N/A" ]]; then
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "DNS" "$DNS_SERVERS")")
+        info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}DNS${C_RESET}        ${C_LAVENDER}%s${C_RESET}" "$DNS_SERVERS")")
     fi
 
     info_lines+=("")
 
-    # GPU
+    # ── GPU ──
     if [[ "$GPU_INFO" != "N/A" ]]; then
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "GPU" "$GPU_INFO")")
+        info_lines+=("$(printf "${C_SEC_GPU}${C_BOLD}GPU${C_RESET}        ${C_VALUE}%s${C_RESET}" "$GPU_INFO")")
         [[ "$GPU_DRIVER" != "N/A" ]] && \
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "GPU Driver" "$GPU_DRIVER")")
+            info_lines+=("$(printf "${C_SEC_GPU}${C_BOLD}GPU Driver${C_RESET} ${C_LAVENDER}%s${C_RESET}" "$GPU_DRIVER")")
     fi
 
-    # Packages
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s packages (%s)" "Packages" "$PKG_COUNT" "$PKG_MANAGER")")
+    # ── PACKAGES ──
+    info_lines+=("$(printf "${C_SEC_PKG}${C_BOLD}Packages${C_RESET}  ${C_GOLD}%s${C_RESET} packages (${C_SKY}%s${C_RESET})" "$PKG_COUNT" "$PKG_MANAGER")")
 
-    # Uptime / Load
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Uptime" "$UPTIME_HUMAN")")
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Load Avg" "$LOAD_AVG")")
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Processes" "${PROCS_RUNNING} active / ${PROCS_TOTAL} total")")
+    # ── UPTIME / LOAD ──
+    info_lines+=("$(printf "${C_SEC_PKG}${C_BOLD}Uptime${C_RESET}    ${C_LIME}%s${C_RESET}" "$UPTIME_HUMAN")")
+    info_lines+=("$(printf "${C_SEC_PKG}${C_BOLD}Load Avg${C_RESET}  ${C_ORANGE}%s${C_RESET}" "$LOAD_AVG")")
+    info_lines+=("$(printf "${C_SEC_PKG}${C_BOLD}Processes${C_RESET} ${C_TEAL}%s${C_RESET} active / ${C_VALUE}%s${C_RESET} total" "$PROCS_RUNNING" "$PROCS_TOTAL")")
 
-    # Security
+    # ── SECURITY ──
     info_lines+=("")
     if [[ "$IS_ROOT" == "true" ]]; then
-        info_lines+=("$(printf "${C_RED}${C_BOLD}%-14s${C_RESET} ${C_RED}ROOT${C_RESET}" "User")")
+        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}User${C_RESET}       ${C_BAD}${C_BOLD}⚠ ROOT${C_RESET}" "")")
     else
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "User" "$(whoami)@$(hostname)")")
+        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}User${C_RESET}       ${C_VALUE}%s${C_RESET}" "$(whoami)@$(hostname)")")
     fi
     [[ "$SSH_SESSION" == "true" ]] && \
-        info_lines+=("$(printf "${C_GREEN}%-14s${C_RESET} ${C_GREEN}● SSH Session${C_RESET}" "")")
+        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}             ${C_GOOD}● SSH Session${C_RESET}" "")")
     [[ "$APPARMOR" != "N/A" ]] && \
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "AppArmor" "$APPARMOR")")
+        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}AppArmor${C_RESET}   ${C_GOOD}%s${C_RESET}" "$APPARMOR")")
     [[ "$FIREWALL" != "N/A" ]] && \
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Firewall" "$FIREWALL")")
+        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}Firewall${C_RESET}   ${C_GOOD}%s${C_RESET}" "$FIREWALL")")
 
     if [[ "$AVAIL_UPDATES" -gt 0 ]]; then
-        info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} ${C_YELLOW}%d updates available${C_RESET}" "Updates" "$AVAIL_UPDATES")")
+        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}Updates${C_RESET}    ${C_WARN}${C_BOLD}%d updates available${C_RESET}" "$AVAIL_UPDATES")")
     fi
 
-    # Cloud info (if detected)
+    # ── CLOUD ──
     if [[ "$CLOUD_PROVIDER" != "N/A" ]]; then
         info_lines+=("")
-        info_lines+=("$(printf "${C_CYAN}${C_BOLD}%-14s${C_RESET} ${C_CYAN}%s${C_RESET}" "☁ Cloud" "$CLOUD_PROVIDER")")
+        info_lines+=("$(printf "${C_SEC_CLOUD}${C_BOLD}☁ Cloud${C_RESET}     ${C_CYAN}${C_BOLD}%s${C_RESET}" "$CLOUD_PROVIDER")")
         [[ "$CLOUD_INSTANCE" != "N/A" ]] && \
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Instance" "$CLOUD_INSTANCE")")
+            info_lines+=("$(printf "${C_SEC_CLOUD}${C_BOLD}Instance${C_RESET}   ${C_VALUE}%s${C_RESET}" "$CLOUD_INSTANCE")")
         [[ "$CLOUD_INSTANCE_TYPE" != "N/A" ]] && \
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Instance Type" "$CLOUD_INSTANCE_TYPE")")
+            info_lines+=("$(printf "${C_SEC_CLOUD}${C_BOLD}Type${C_RESET}       ${C_ORANGE}%s${C_RESET}" "$CLOUD_INSTANCE_TYPE")")
         [[ "$CLOUD_REGION" != "N/A" ]] && \
-            info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} %s" "Region" "$CLOUD_REGION")")
+            info_lines+=("$(printf "${C_SEC_CLOUD}${C_BOLD}Region${C_RESET}     ${C_TEAL}%s${C_RESET}" "$CLOUD_REGION")")
     fi
 
     # Boot time
     info_lines+=("")
-    info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} ${C_DIM}%s${C_RESET}" "Boot Time" "$BOOT_TIME")")
+    info_lines+=("$(printf "${C_GRAY}Boot Time${C_RESET}   ${C_DIM}%s${C_RESET}" "$BOOT_TIME")")
 
     # ── Render side by side (ASCII left, info right) ──
     #
