@@ -1303,73 +1303,133 @@ main() {
     # ── Build info lines into array ──
     local info_lines=()
 
-    # ── HEADER ──
-    info_lines+=("$(printf "${C_GOLD}${C_BOLD}%s${C_RESET}" "$DISTRO_NAME")")
-
-    # VM status line
-    if [[ "$IS_VM" == "true" ]]; then
-        info_lines+=("$(printf "${C_PINK}${C_BOLD}⚡ VM: %s${C_RESET}" "$VM_HYPERVISOR")")
-    else
-        info_lines+=("$(printf "${C_LIME}${C_BOLD}⬥ Bare Metal${C_RESET}")")
+    # Detect shell info
+    local shell_name="${SHELL:-N/A}"
+    local shell_version=""
+    if [[ -n "$shell_name" && "$shell_name" != "N/A" ]]; then
+        shell_version=$("$shell_name" --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1 || echo "")
+        shell_name=$(basename "$shell_name")
     fi
 
-    if [[ "$IS_CONTAINER" == "true" ]]; then
-        info_lines+=("$(printf "${C_TEAL}${C_BOLD}📦 Container: %s${C_RESET}" "$CONTAINER_TYPE")")
-    fi
-
-    info_lines+=("")
-
-    # ── KERNEL ──
-    info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Kernel${C_RESET}  ${C_VALUE}%s${C_RESET}" "$KERNEL_RELEASE ($KERNEL_ARCH)")")
-    info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}OS${C_RESET}      ${C_VALUE}%s${C_RESET}" "$DISTRO_NAME")")
-    if [[ -n "$DISTRO_CODENAME" ]]; then
-        info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Codename${C_RESET} ${C_SKY}%s${C_RESET}" "$DISTRO_CODENAME")")
-    fi
-
-    # Host / VM
-    if [[ "$IS_VM" == "true" ]]; then
-        info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Hypervisor${C_RESET} ${C_PINK}${C_BOLD}%s${C_RESET}" "$VM_HYPERVISOR")")
-        [[ -n "$VM_MANUFACTURER" && "$VM_MANUFACTURER" != "N/A" ]] && \
-            info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Host/Brand${C_RESET} ${C_VALUE}%s${C_RESET}" "$VM_MANUFACTURER $VM_PRODUCT")")
-        [[ -n "$VM_NAME" && "$VM_NAME" != "N/A" ]] && \
-            info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}VM Name${C_RESET}   ${C_LAVENDER}%s${C_RESET}" "$VM_NAME")")
-        if [[ -n "$VIRT_FLAGS" ]]; then
-            info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Virt${C_RESET}      ${C_TEAL}%s${C_RESET}" "$VIRT_FLAGS")")
+    # Detect terminal
+    local term_name="${TERM_PROGRAM:-${TERM:-N/A}}"
+    # Check if running in a known terminal
+    if [[ -t 1 ]]; then
+        if [[ -n "${SSH_CONNECTION:-}" ]] || [[ -n "${SSH_CLIENT:-}" ]]; then
+            term_name="ssh"
+        elif [[ -n "${TMUX:-}" ]]; then
+            term_name="tmux"
+        elif [[ -n "${STY:-}" ]]; then
+            term_name="screen"
         fi
+    fi
+
+    # Detect resolution
+    local resolution="N/A"
+    if has_cmd xrandr; then
+        resolution=$(xrandr 2>/dev/null | grep '*' | head -1 | awk '{print $1}' || echo "")
+    fi
+    # For VPS/headless, show terminal size
+    if [[ -z "$resolution" || "$resolution" == "N/A" ]]; then
+        if [[ -t 1 ]]; then
+            local rows cols
+            rows=$(tput lines 2>/dev/null || echo "")
+            cols=$(tput cols 2>/dev/null || echo "")
+            if [[ -n "$rows" && -n "$cols" ]]; then
+                resolution="${cols}x${rows}"
+            fi
+        fi
+    fi
+
+    # Snap package count
+    local snap_count=0
+    if has_cmd snap; then
+        snap_count=$(snap list 2>/dev/null | tail -n +2 | wc -l || echo "0")
+    fi
+
+    # ── HEADER ──
+    local user_color="$C_LIME"
+    [[ "$IS_ROOT" == "true" ]] && user_color="$C_BAD"
+    info_lines+=("$(printf "${user_color}${C_BOLD}%s@%s${C_RESET}" "$(whoami 2>/dev/null || echo root)" "$(hostname 2>/dev/null || echo unknown)")")
+    info_lines+=("$(printf "${C_DIM}──────────────────${C_RESET}")")
+
+    # ── OS ──
+    info_lines+=("$(printf "${C_LABEL}OS${C_RESET}        ${C_VALUE}%s${C_RESET}" "$DISTRO_NAME")")
+
+    # Host / VM info
+    if [[ "$IS_VM" == "true" ]]; then
+        info_lines+=("$(printf "${C_LABEL}Host${C_RESET}      ${C_PINK}${C_BOLD}%s${C_RESET}" "${VM_MANUFACTURER:-N/A} ${VM_PRODUCT:-}")")
+        info_lines+=("$(printf "${C_LABEL}Hypervisor${C_RESET} ${C_ORANGE}${C_BOLD}%s${C_RESET}" "$VM_HYPERVISOR")")
     else
         local hw_vendor hw_product
         hw_vendor=$(read_sysfs "/sys/devices/virtual/dmi/id/board_vendor" "")
         hw_product=$(read_sysfs "/sys/devices/virtual/dmi/id/board_name" "")
         [[ -n "$hw_vendor" ]] && \
-            info_lines+=("$(printf "${C_SEC_KERNEL}${C_BOLD}Motherboard${C_RESET} ${C_VALUE}%s${C_RESET}" "$hw_vendor $hw_product")")
+            info_lines+=("$(printf "${C_LABEL}Host${C_RESET}      ${C_VALUE}%s${C_RESET}" "$hw_vendor $hw_product")")
     fi
 
-    info_lines+=("")
+    if [[ "$IS_CONTAINER" == "true" ]]; then
+        info_lines+=("$(printf "${C_LABEL}Container${C_RESET} ${C_TEAL}${C_BOLD}%s${C_RESET}" "$CONTAINER_TYPE")")
+    fi
+
+    # ── KERNEL ──
+    info_lines+=("$(printf "${C_LABEL}Kernel${C_RESET}    ${C_VALUE}%s${C_RESET}" "$KERNEL_RELEASE")")
+
+    # ── UPTIME ──
+    info_lines+=("$(printf "${C_LABEL}Uptime${C_RESET}    ${C_LIME}%s${C_RESET}" "$UPTIME_HUMAN")")
+
+    # ── PACKAGES ──
+    local pkg_str="${PKG_COUNT} (dpkg)"
+    if (( snap_count > 0 )); then
+        pkg_str="${pkg_str}, ${snap_count} (snap)"
+    fi
+    info_lines+=("$(printf "${C_LABEL}Packages${C_RESET}  ${C_GOLD}%s${C_RESET}" "$pkg_str")")
+
+    # ── SHELL ──
+    if [[ -n "$shell_version" ]]; then
+        info_lines+=("$(printf "${C_LABEL}Shell${C_RESET}     ${C_SKY}%s %s${C_RESET}" "$shell_name" "$shell_version")")
+    else
+        info_lines+=("$(printf "${C_LABEL}Shell${C_RESET}     ${C_SKY}%s${C_RESET}" "$shell_name")")
+    fi
+
+    # ── RESOLUTION ──
+    info_lines+=("$(printf "${C_LABEL}Resolution${C_RESET} ${C_VALUE}%s${C_RESET}" "$resolution")")
+
+    # ── TERMINAL ──
+    info_lines+=("$(printf "${C_LABEL}Terminal${C_RESET}  ${C_LAVENDER}%s${C_RESET}" "$term_name")")
 
     # ── CPU ──
-    info_lines+=("$(printf "${C_SEC_CPU}${C_BOLD}CPU${C_RESET}        ${C_VALUE}%s${C_RESET}" "$CPU_MODEL")")
-    local cpu_desc="${CPU_CORES_PHYSICAL}C / ${CPU_CORES_LOGICAL}T"
-    [[ "$CPU_SOCKETS" -gt 1 ]] && cpu_desc="${CPU_SOCKETS} sockets, ${cpu_desc}"
-    [[ "$CPU_MHZ" != "N/A" ]] && cpu_desc="${cpu_desc} @ ${CPU_MHZ} MHz"
-    info_lines+=("$(printf "${C_SEC_CPU}${C_BOLD}CPU Config${C_RESET} ${C_ORANGE}%s${C_RESET}" "$cpu_desc")")
-    [[ -n "$CPU_VIRT" ]] && \
-        info_lines+=("$(printf "${C_SEC_CPU}${C_BOLD}Virt${C_RESET}      ${C_TEAL}%s${C_RESET}" "$CPU_VIRT")")
-    [[ "$CPU_CACHE" != "N/A" ]] && \
-        info_lines+=("$(printf "${C_SEC_CPU}${C_BOLD}Cache${C_RESET}     ${C_VALUE}%s${C_RESET}" "$CPU_CACHE")")
+    local cpu_short
+    cpu_short=$(echo "$CPU_MODEL" | sed 's/(R)//g; s/(TM)//g; s/CPU //g; s/  */ /g' | xargs 2>/dev/null || echo "$CPU_MODEL")
+    # Remove trailing @ speed from model if present
+    cpu_short=$(echo "$cpu_short" | sed 's/ @ [0-9.]*GHz//; s/ @ [0-9.]*MHz//; s/  */ /g' | xargs 2>/dev/null || echo "$cpu_short")
+    local cpu_threads="$CPU_CORES_LOGICAL"
+    local cpu_freq=""
+    if [[ "$CPU_MHZ" != "N/A" ]]; then
+        if (( CPU_MHZ > 1000 )); then
+            cpu_freq=$(awk "BEGIN {printf \" @ %.2fGHz\", ${CPU_MHZ}/1000}")
+        else
+            cpu_freq=" @ ${CPU_MHZ}MHz"
+        fi
+    fi
+    info_lines+=("$(printf "${C_LABEL}CPU${C_RESET}        ${C_SEC_CPU}%s${C_RESET} (${C_ORANGE}%s${C_RESET})" "$cpu_short" "${cpu_threads}${cpu_freq}")")
 
-    info_lines+=("")
+    # ── GPU ──
+    if [[ "$GPU_INFO" != "N/A" ]]; then
+        local gpu_short
+        gpu_short=$(echo "$GPU_INFO" | sed 's/^[0-9]*:[0-9]*.[0-9]* //' | xargs 2>/dev/null || echo "$GPU_INFO")
+        info_lines+=("$(printf "${C_LABEL}GPU${C_RESET}        ${C_SEC_GPU}%s${C_RESET}" "$gpu_short")")
+    fi
 
     # ── MEMORY ──
-    local mem_used_h mem_total_h mem_pct_str
-    mem_total_h=$(awk "BEGIN {printf \"%.1f\", ${MEM_TOTAL}/1048576}")
-    mem_used_h=$(awk "BEGIN {printf \"%.1f\", ${MEM_USED}/1048576}")
-    mem_pct_str="${MEM_PERCENT}%"
-    # Color the percentage based on usage
+    local mem_used_h mem_total_h
+    mem_total_h=$(awk "BEGIN {printf \"%d\", ${MEM_TOTAL}/1024}")
+    mem_used_h=$(awk "BEGIN {printf \"%d\", ${MEM_USED}/1024}")
     local mem_color="$C_GOOD"
     local mem_pct_int=${MEM_PERCENT%.*}
     (( mem_pct_int > 80 )) && mem_color="$C_BAD"
     (( mem_pct_int > 60 && mem_pct_int <= 80 )) && mem_color="$C_WARN"
-    info_lines+=("$(printf "${C_SEC_MEM}${C_BOLD}Memory${C_RESET}     ${mem_color}%s${C_RESET} ${C_DIM}│${C_RESET} %s / %s MiB" "${mem_pct_str}" "$mem_used_h" "$mem_total_h")")
+    info_lines+=("$(printf "${C_LABEL}Memory${C_RESET}     ${mem_color}%sMiB${C_RESET} / %sMiB" "$mem_used_h" "$mem_total_h")")
 
     # Memory bar — vivid gradient
     local bar_len=20
@@ -1392,96 +1452,57 @@ main() {
             bar="${bar}${C_DIM}░${C_RESET}"
         fi
     done
-    info_lines+=("$(printf "${C_SEC_MEM}            ${C_RESET}")${bar}")
-
-    if (( SWAP_TOTAL > 0 )); then
-        local swap_h
-        swap_h=$(awk "BEGIN {printf \"%.1f\", ${SWAP_USED}/1048576}")
-        local swap_total_h
-        swap_total_h=$(awk "BEGIN {printf \"%.1f\", ${SWAP_TOTAL}/1048576}")
-        info_lines+=("$(printf "${C_SEC_MEM}${C_BOLD}Swap${C_RESET}       ${C_SKY}%s${C_RESET} / %s MiB" "$swap_h" "$swap_total_h")")
-    fi
-
-    info_lines+=("")
+    info_lines+=("$(printf "${C_LABEL}            ${C_RESET}")${bar}")
 
     # ── DISK ──
-    local disk_color="$C_GOOD"
-    (( DISK_PERCENT > 80 )) && disk_color="$C_BAD"
-    (( DISK_PERCENT > 60 && DISK_PERCENT <= 80 )) && disk_color="$C_WARN"
-    info_lines+=("$(printf "${C_SEC_DISK}${C_BOLD}Disk (/)${C_RESET}    ${disk_color}%s${C_RESET} / %s (${DISK_PERCENT}%% used)" "$DISK_USED" "$DISK_TOTAL")")
-    info_lines+=("$(printf "${C_SEC_DISK}${C_BOLD}Filesystem${C_RESET} ${C_VALUE}%s${C_RESET}" "${ROOT_FS_TYPE}")")
-
-    if [[ "$IS_VM" == "true" ]]; then
-        [[ "$VIRT_DISK_DRIVER" != "N/A" ]] && \
-            info_lines+=("$(printf "${C_SEC_DISK}${C_BOLD}Disk Driver${C_RESET} ${C_ORANGE}%s${C_RESET}" "$VIRT_DISK_DRIVER")")
-    fi
-
-    info_lines+=("")
+    info_lines+=("$(printf "${C_LABEL}Disk${C_RESET}      ${C_VALUE}%s / %s (${DISK_PERCENT}%%)${C_RESET}" "$DISK_USED" "$DISK_TOTAL")")
 
     # ── NETWORK ──
-    info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}Network${C_RESET}   ${C_VALUE}%s${C_RESET} (${C_SKY}%s${C_RESET})" "$PRIMARY_IFACE" "$PRIMARY_IP")")
-    if [[ "$PRIMARY_MAC" != "N/A" ]]; then
-        info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}MAC${C_RESET}        ${C_GRAY}%s${C_RESET}" "$PRIMARY_MAC")")
-    fi
-    if [[ "$PRIMARY_SPEED" != "N/A" && "$PRIMARY_SPEED" != "-1" ]]; then
-        info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}Link Speed${C_RESET} ${C_LIME}%s${C_RESET} Mbps" "$PRIMARY_SPEED")")
-    fi
-    info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}Traffic${C_RESET}   ${C_GOOD}↑ %s${C_RESET}  ${C_CORAL}↓ %s${C_RESET}" \
-        "$(human_size "$NET_TX_BYTES")" "$(human_size "$NET_RX_BYTES")")")
-    if [[ "$DNS_SERVERS" != "N/A" ]]; then
-        info_lines+=("$(printf "${C_SEC_NET}${C_BOLD}DNS${C_RESET}        ${C_LAVENDER}%s${C_RESET}" "$DNS_SERVERS")")
-    fi
+    info_lines+=("$(printf "${C_LABEL}Network${C_RESET}   ${C_VALUE}%s${C_RESET} (${C_SKY}%s${C_RESET})" "$PRIMARY_IFACE" "$PRIMARY_IP")")
 
-    info_lines+=("")
-
-    # ── GPU ──
-    if [[ "$GPU_INFO" != "N/A" ]]; then
-        info_lines+=("$(printf "${C_SEC_GPU}${C_BOLD}GPU${C_RESET}        ${C_VALUE}%s${C_RESET}" "$GPU_INFO")")
-        [[ "$GPU_DRIVER" != "N/A" ]] && \
-            info_lines+=("$(printf "${C_SEC_GPU}${C_BOLD}GPU Driver${C_RESET} ${C_LAVENDER}%s${C_RESET}" "$GPU_DRIVER")")
+    # ── SECURITY LINE ──
+    local sec_parts=""
+    [[ "$SSH_SESSION" == "true" ]] && sec_parts="${sec_parts}${C_GOOD}SSH${C_RESET} "
+    [[ "$IS_ROOT" == "true" ]] && sec_parts="${sec_parts}${C_BAD}ROOT${C_RESET} "
+    [[ "$APPARMOR" == "Active" ]] && sec_parts="${sec_parts}${C_GOOD}AppArmor${C_RESET} "
+    [[ "$FIREWALL" != "N/A" ]] && sec_parts="${sec_parts}${C_GOOD}Firewall${C_RESET} "
+    if [[ -n "$sec_parts" ]]; then
+        info_lines+=("$(printf "${C_LABEL}Security${C_RESET}  ${sec_parts}")")
     fi
 
-    # ── PACKAGES ──
-    info_lines+=("$(printf "${C_SEC_PKG}${C_BOLD}Packages${C_RESET}  ${C_GOLD}%s${C_RESET} packages (${C_SKY}%s${C_RESET})" "$PKG_COUNT" "$PKG_MANAGER")")
-
-    # ── UPTIME / LOAD ──
-    info_lines+=("$(printf "${C_SEC_PKG}${C_BOLD}Uptime${C_RESET}    ${C_LIME}%s${C_RESET}" "$UPTIME_HUMAN")")
-    info_lines+=("$(printf "${C_SEC_PKG}${C_BOLD}Load Avg${C_RESET}  ${C_ORANGE}%s${C_RESET}" "$LOAD_AVG")")
-    info_lines+=("$(printf "${C_SEC_PKG}${C_BOLD}Processes${C_RESET} ${C_TEAL}%s${C_RESET} active / ${C_VALUE}%s${C_RESET} total" "$PROCS_RUNNING" "$PROCS_TOTAL")")
-
-    # ── SECURITY ──
-    info_lines+=("")
-    if [[ "$IS_ROOT" == "true" ]]; then
-        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}User${C_RESET}       ${C_BAD}${C_BOLD}⚠ ROOT${C_RESET}" "")")
-    else
-        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}User${C_RESET}       ${C_VALUE}%s${C_RESET}" "$(whoami)@$(hostname)")")
-    fi
-    [[ "$SSH_SESSION" == "true" ]] && \
-        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}             ${C_GOOD}● SSH Session${C_RESET}" "")")
-    [[ "$APPARMOR" != "N/A" ]] && \
-        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}AppArmor${C_RESET}   ${C_GOOD}%s${C_RESET}" "$APPARMOR")")
-    [[ "$FIREWALL" != "N/A" ]] && \
-        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}Firewall${C_RESET}   ${C_GOOD}%s${C_RESET}" "$FIREWALL")")
-
-    if [[ "$AVAIL_UPDATES" -gt 0 ]]; then
-        info_lines+=("$(printf "${C_SEC_SEC}${C_BOLD}Updates${C_RESET}    ${C_WARN}${C_BOLD}%d updates available${C_RESET}" "$AVAIL_UPDATES")")
+    # ── VM EXTENDED INFO (shown below standard info) ──
+    if [[ "$IS_VM" == "true" ]]; then
+        if [[ -n "$VIRT_FLAGS" ]]; then
+            info_lines+=("$(printf "${C_LABEL}Virt Flags${C_RESET} ${C_TEAL}%s${C_RESET}" "$VIRT_FLAGS")")
+        fi
+        if [[ -n "$VM_NAME" && "$VM_NAME" != "N/A" ]]; then
+            info_lines+=("$(printf "${C_LABEL}VM Name${C_RESET}   ${C_LAVENDER}%s${C_RESET}" "$VM_NAME")")
+        fi
+        if [[ "$VIRT_DISK_DRIVER" != "N/A" ]]; then
+            info_lines+=("$(printf "${C_LABEL}Disk I/O${C_RESET}   ${C_ORANGE}%s${C_RESET}" "$VIRT_DISK_DRIVER")")
+        fi
+        if [[ "$GPU_DRIVER" != "N/A" ]]; then
+            info_lines+=("$(printf "${C_LABEL}GPU Driver${C_RESET} ${C_LAVENDER}%s${C_RESET}" "$GPU_DRIVER")")
+        fi
     fi
 
-    # ── CLOUD ──
+    # ── CLOUD EXTENDED INFO ──
     if [[ "$CLOUD_PROVIDER" != "N/A" ]]; then
-        info_lines+=("")
-        info_lines+=("$(printf "${C_SEC_CLOUD}${C_BOLD}☁ Cloud${C_RESET}     ${C_CYAN}${C_BOLD}%s${C_RESET}" "$CLOUD_PROVIDER")")
+        info_lines+=("$(printf "${C_LABEL}☁ Cloud${C_RESET}     ${C_CYAN}${C_BOLD}%s${C_RESET}" "$CLOUD_PROVIDER")")
         [[ "$CLOUD_INSTANCE" != "N/A" ]] && \
-            info_lines+=("$(printf "${C_SEC_CLOUD}${C_BOLD}Instance${C_RESET}   ${C_VALUE}%s${C_RESET}" "$CLOUD_INSTANCE")")
+            info_lines+=("$(printf "${C_LABEL}Instance${C_RESET}  ${C_VALUE}%s${C_RESET}" "$CLOUD_INSTANCE")")
         [[ "$CLOUD_INSTANCE_TYPE" != "N/A" ]] && \
-            info_lines+=("$(printf "${C_SEC_CLOUD}${C_BOLD}Type${C_RESET}       ${C_ORANGE}%s${C_RESET}" "$CLOUD_INSTANCE_TYPE")")
+            info_lines+=("$(printf "${C_LABEL}VM Type${C_RESET}    ${C_ORANGE}%s${C_RESET}" "$CLOUD_INSTANCE_TYPE")")
         [[ "$CLOUD_REGION" != "N/A" ]] && \
-            info_lines+=("$(printf "${C_SEC_CLOUD}${C_BOLD}Region${C_RESET}     ${C_TEAL}%s${C_RESET}" "$CLOUD_REGION")")
+            info_lines+=("$(printf "${C_LABEL}Region${C_RESET}    ${C_TEAL}%s${C_RESET}" "$CLOUD_REGION")")
     fi
+
+    # ── LOAD / PROCESSES ──
+    info_lines+=("$(printf "${C_LABEL}Load${C_RESET}      ${C_ORANGE}%s${C_RESET}" "$LOAD_AVG")")
+    info_lines+=("$(printf "${C_LABEL}Processes${C_RESET} ${C_TEAL}%s${C_RESET}" "$PROCS_RUNNING running / $PROCS_TOTAL total")")
 
     # Boot time
-    info_lines+=("")
-    info_lines+=("$(printf "${C_GRAY}Boot Time${C_RESET}   ${C_DIM}%s${C_RESET}" "$BOOT_TIME")")
+    info_lines+=("$(printf "${C_DIM}Boot: %s${C_RESET}" "$BOOT_TIME")")
 
     # ── Render side by side (ASCII left, info right) ──
     #
