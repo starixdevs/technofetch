@@ -450,6 +450,39 @@ detect_distro() {
         DISTRO_ID=$(lsb_release -is 2>/dev/null || echo "")
     fi
 
+    # ── Normalize DISTRO_ID from DISTRO_NAME if ID is empty or wrong ──
+    if [[ -z "$DISTRO_ID" || "$DISTRO_ID" == "" ]]; then
+        local name_lower
+        name_lower=$(echo "$DISTRO_NAME" | tr '[:upper:]' '[:lower:]')
+        if echo "$name_lower" | grep -qi "ubuntu"; then
+            DISTRO_ID="ubuntu"
+        elif echo "$name_lower" | grep -qi "debian"; then
+            DISTRO_ID="debian"
+        elif echo "$name_lower" | grep -qi "proxmox"; then
+            DISTRO_ID="proxmox"
+        elif echo "$name_lower" | grep -qi "kali"; then
+            DISTRO_ID="kali"
+        elif echo "$name_lower" | grep -qi "mint"; then
+            DISTRO_ID="linuxmint"
+        elif echo "$name_lower" | grep -qi "pop"; then
+            DISTRO_ID="pop"
+        fi
+    fi
+
+    # ── Second check: also check /etc/os-release ID_LIKE for correct ID ──
+    # Some VPS providers set a weird ID but ID_LIKE=debian, and PRETTY_NAME has the real name
+    if [[ -r /etc/os-release ]]; then
+        local os_id os_pretty
+        os_id=$(grep '^ID=' /etc/os-release 2>/dev/null | head -1 | cut -d= -f2 | tr -d '"')
+        os_pretty=$(grep '^PRETTY_NAME=' /etc/os-release 2>/dev/null | head -1 | cut -d= -f2 | tr -d '"')
+        if [[ -n "$os_id" ]]; then
+            DISTRO_ID="$os_id"
+        fi
+        if [[ -n "$os_pretty" ]]; then
+            DISTRO_NAME="$os_pretty"
+        fi
+    fi
+
     # ── Detect Debian/Ubuntu family
     if [[ -f /etc/debian_version ]]; then
         DISTRO_FAMILY="Debian"
