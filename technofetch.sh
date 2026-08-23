@@ -10,58 +10,60 @@ set -u
 VERSION="2.0.0"
 
 # ─── COLOR PALETTE ──────────────────────────────────────────────────────────
-# Using 256-color mode for vibrant, powerful display
+# Clean 2-color theme: Blue + White
 C_RESET=$'\033[0m'
 C_BOLD=$'\033[1m'
 C_DIM=$'\033[2m'
 C_UNDERLINE=$'\033[4m'
 C_ITALIC=$'\033[3m'
 
-# ── Core colors (256-color for vibrancy) ──
-C_RED=$'\033[38;5;196m'          # Bright vivid red
-C_GREEN=$'\033[38;5;46m'        # Bright vivid green
-C_YELLOW=$'\033[38;5;226m'      # Bright vivid yellow
-C_BLUE=$'\033[38;5;39m'         # Bright vivid blue
-C_MAGENTA=$'\033[38;5;201m'     # Bright vivid magenta/pink
-C_CYAN=$'\033[38;5;51m'         # Bright vivid cyan/aqua
-C_WHITE=$'\033[38;5;231m'       # Pure bright white
-C_GRAY=$'\033[38;5;245m'        # Medium gray
+# ── Blue (labels, accents, ASCII art) ──
+C_BLUE=$'\033[38;5;39m'
 
-# ── Bright accent colors ──
-C_ORANGE=$'\033[38;5;208m'      # Bright orange
-C_PINK=$'\033[38;5;213m'        # Hot pink
-C_LIME=$'\033[38;5;118m'        # Bright lime green
-C_LAVENDER=$'\033[38;5;141m'    # Soft lavender
-C_GOLD=$'\033[38;5;220m'        # Bright gold
-C_TEAL=$'\033[38;5;37m'         # Deep teal
-C_CORAL=$'\033[38;5;203m'       # Coral/salmon
-C_SKY=$'\033[38;5;117m'         # Sky blue
+# ── White (values, text) ──
+C_WHITE=$'\033[38;5;231m'
 
-# ── Section header colors (vivid backgrounds) ──
-C_SEC_KERNEL=$'\033[38;5;75m'    # Soft blue for kernel
-C_SEC_CPU=$'\033[38;5;213m'     # Pink for CPU
-C_SEC_MEM=$'\033[38;5;46m'      # Green for memory
-C_SEC_DISK=$'\033[38;5;208m'    # Orange for disk
-C_SEC_NET=$'\033[38;5;39m'      # Blue for network
-C_SEC_GPU=$'\033[38;5;141m'     # Lavender for GPU
-C_SEC_PKG=$'\033[38;5;220m'     # Gold for packages
-C_SEC_SEC=$'\033[38;5;196m'     # Red for security
-C_SEC_CLOUD=$'\033[38;5;51m'    # Cyan for cloud
+# Aliases for compatibility
+C_RED=$C_WHITE
+C_GREEN=$C_WHITE
+C_YELLOW=$C_WHITE
+C_MAGENTA=$C_BLUE
+C_CYAN=$C_BLUE
+C_GRAY=$C_DIM
+C_ORANGE=$C_WHITE
+C_PINK=$C_BLUE
+C_LIME=$C_WHITE
+C_LAVENDER=$C_BLUE
+C_GOLD=$C_WHITE
+C_TEAL=$C_BLUE
+C_CORAL=$C_WHITE
+C_SKY=$C_BLUE
 
-# ── Semantic colors ──
-C_LABEL=$'\033[38;5;75m'        # Labels: soft blue
-C_VALUE=$'\033[38;5;231m'       # Values: bright white
-C_HIGHLIGHT=$'\033[38;5;226m'   # Highlights: bright yellow
-C_GOOD=$'\033[38;5;46m'         # Good status: bright green
-C_WARN=$'\033[38;5;208m'        # Warning: orange
-C_BAD=$'\033[38;5;196m'         # Bad/danger: bright red
+# Section colors (all blue or white)
+C_SEC_KERNEL=$C_BLUE
+C_SEC_CPU=$C_BLUE
+C_SEC_MEM=$C_BLUE
+C_SEC_DISK=$C_BLUE
+C_SEC_NET=$C_BLUE
+C_SEC_GPU=$C_BLUE
+C_SEC_PKG=$C_BLUE
+C_SEC_SEC=$C_BLUE
+C_SEC_CLOUD=$C_BLUE
+
+# Semantic colors
+C_LABEL=$C_BLUE
+C_VALUE=$C_WHITE
+C_HIGHLIGHT=$C_WHITE
+C_GOOD=$C_WHITE
+C_WARN=$C_WHITE
+C_BAD=$C_WHITE
 
 # Accent colors for labels
-LABEL_COLOR="${C_LABEL}"
-INFO_COLOR="${C_VALUE}"
+LABEL_COLOR="${C_BLUE}"
+INFO_COLOR="${C_WHITE}"
 SEPARATOR_COLOR="${C_DIM}"
-VM_COLOR="${C_PINK}"
-DISTRO_COLOR="${C_GOLD}"
+VM_COLOR="${C_BLUE}"
+DISTRO_COLOR="${C_WHITE}"
 
 # ─── CONFIGURATION ──────────────────────────────────────────────────────────
 SHOW_ASCII=true
@@ -1203,16 +1205,16 @@ get_storage_info() {
 
 # ─── DISPLAY FUNCTIONS ─────────────────────────────────────────────────────
 
-# Row 1: Standard vivid colors (256-color backgrounds)
+# Row 1: Blue and white blocks
 print_color_blocks() {
     local blocks=()
     blocks+=($'\033[48;5;16m')   # Dark gray (black)
-    blocks+=($'\033[48;5;196m')  # Vivid red
-    blocks+=($'\033[48;5;46m')   # Vivid green
-    blocks+=($'\033[48;5;226m')  # Vivid yellow
+    blocks+=($'\033[48;5;235m')  # Dark blue-black
+    blocks+=($'\033[48;5;236m')  # Darker blue
+    blocks+=($'\033[48;5;237m')  # Dark blue
     blocks+=($'\033[48;5;39m')   # Vivid blue
-    blocks+=($'\033[48;5;201m')  # Vivid magenta
-    blocks+=($'\033[48;5;51m')   # Vivid cyan
+    blocks+=($'\033[48;5;75m')   # Medium blue
+    blocks+=($'\033[48;5;111m')  # Light blue
     blocks+=($'\033[48;5;231m')  # Pure white
 
     printf "  "
@@ -1222,17 +1224,17 @@ print_color_blocks() {
     echo ""
 }
 
-# Row 2: Bright / high-intensity colors
+# Row 2: Blue gradient
 print_color_blocks_2() {
     local blocks=()
-    blocks+=($'\033[48;5;240m')  # Dark gray
-    blocks+=($'\033[48;5;208m')  # Bright orange
-    blocks+=($'\033[48;5;118m')  # Bright lime
-    blocks+=($'\033[48;5;220m')  # Bright gold
-    blocks+=($'\033[48;5;75m')   # Soft blue
-    blocks+=($'\033[48;5;213m')  # Hot pink
-    blocks+=($'\033[48;5;117m')  # Sky blue
-    blocks+=($'\033[48;5;255m')  # Bright white
+    blocks+=($'\033[48;5;17m')   # Black-blue
+    blocks+=($'\033[48;5;18m')   # Dark navy
+    blocks+=($'\033[48;5;19m')   # Navy
+    blocks+=($'\033[48;5;20m')   # Blue
+    blocks+=($'\033[48;5;21m')   # Royal blue
+    blocks+=($'\033[48;5;27m')   # Bright blue
+    blocks+=($'\033[48;5;63m')   # Periwinkle
+    blocks+=($'\033[48;5;159m')  # Light periwinkle
 
     printf "  "
     for block in "${blocks[@]}"; do
