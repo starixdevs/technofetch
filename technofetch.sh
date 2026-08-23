@@ -80,304 +80,217 @@ read_ascii_art() {
     local distro_id="${2:-unknown}"
     local distro_version="${3:-}"
 
-    # ── Ubuntu Logo ──
+    # Colors: c1=blue, c2=white (blue+white theme)
+    local c1=$'\033[38;5;39m'
+    local c2=$'\033[38;5;231m'
+    local reset=$'\033[0m'
+
+    # ── Ubuntu (real neofetch logo) ──
     if [[ "$distro_id" == "ubuntu" ]]; then
         case "$style" in
-            compact)
-                cat << 'ART'
-    ╭───────────────╮
-    │               │
-    │     _   _     │
-    │    | | | |    │
-    │    | |_| |    │
-    │     \___/     │
-    │   \       /   │
-    │    \     /    │
-    │     \   /     │
-    │      \_/      │
-    │               │
-    │    UBUNTU     │
-    ╰───────────────╯
-ART
-                ;;
-            box)
-                cat << 'ART'
- ╔═════════════════════════╗
- ║                         ║
- ║       _   _             ║
- ║      | | | |            ║
- ║      | |_| |            ║
- ║       \___/             ║
- ║     \       /           ║
- ║      \     /            ║
- ║       \   /             ║
- ║        \_/              ║
- ║                         ║
- ║       UBUNTU            ║
- ╚═════════════════════════╝
-ART
-                ;;
-            minimal)
-                cat << 'ART'
-  ┌─ UBUNTU ─────────────┐
-  │                       │
-  │      _   _            │
-  │     | | | |           │
-  │     | |_| |           │
-  │      \___/            │
-  │    \       /          │
-  │     \     /           │
-  │      \   /            │
-  │       \_/             │
-  └───────────────────────┘
-ART
+            compact|small)
+                cat << EOF
+${c1}         _
+${c1}     ---(_)
+${c1} _/  ---  \\
+${c1}(_) |   |
+${c1}  \\  --- _/
+${c1}     ---(_)
+${reset}EOF
                 ;;
             *)
-                cat << 'ART'
-                 ╭───────────────────────────────╮
-                 │                               │
-                 │           _   _               │
-                 │          | | | |              │
-                 │          | |_| |              │
-                 │           \___/               │
-                 │         \       /             │
-                 │          \     /              │
-                 │           \   /               │
-                 │            \_/                │
-                 │                               │
-                 │          UBUNTU               │
-                 │         ── v2.0 ──            │
-                 │                               │
-                 ╰───────────────────────────────╯
-ART
+                cat << EOF
+${c1}            .-/+oossssoo+/-.
+${c1}        \`:+ssssssssssssssssss+:\`
+${c1}      -+ssssssssssssssssssyyssss+-
+${c1}    .ossssssssssssssssss${c2}dMMMNy${c1}sssso.
+${c1}   /sssssssssss${c2}hdmmNNmmyNMMMMh${c1}ssssss\\
+${c1}  +sssssssss${c2}hm${c1}yd${c2}MMMMMMMNddddy${c1}ssssssss+
+${c1} /ssssssss${c2}hNMMM${c1}yh${c2}hyyyyhmNMMMNh${c1}ssssssss\\
+${c1}.ssssssss${c2}dMMMNh${c1}ssssssssss${c2}hNMMMd${c1}ssssssss.
+${c1}+ssss${c2}hhhyNMMNy${c1}ssssssssssss${c2}yNMMMy${c1}sssssss+
+${c1}oss${c2}yNMMMNyMMh${c1}ssssssssssssss${c2}hmmmh${c1}ssssssso
+${c1}oss${c2}yNMMMNyMMh${c1}sssssssssssssshmmmh${c1}ssssssso
+${c1}+ssss${c2}hhhyNMMNy${c1}ssssssssssss${c2}yNMMMy${c1}sssssss+
+${c1}.ssssssss${c2}dMMMNh${c1}ssssssssss${c2}hNMMMd${c1}ssssssss.
+${c1} \\ssssssss${c2}hNMMM${c1}yh${c2}hyyyyhdNMMMNh${c1}ssssssss/
+${c1}  +sssssssss${c2}dm${c1}yd${c2}MMMMMMMMddddy${c1}ssssssss+
+${c1}   \\sssssssssss${c2}hdmNNNNmyNMMMMh${c1}ssssss/
+${c1}    .ossssssssssssssssss${c2}dMMMNy${c1}sssso.
+${c1}      -+sssssssssssssssss${c2}yyy${c1}ssss+-
+${c1}        \`:+ssssssssssssssssss+:\`
+${c1}            .-\\+oossssoo+/-.
+${reset}EOF
                 ;;
         esac
         return
     fi
 
-    # ── Debian Logo ──
+    # ── Debian (real neofetch logo) ──
     if [[ "$distro_id" == "debian" ]]; then
         case "$style" in
-            compact)
-                cat << 'ART'
-    ╭───────────────╮
-    │               │
-    │      .--.     │
-    │     /    \    │
-    │    | .--. |   │
-    │    | |  | |   │
-    │    | \__/ |   │
-    │     \    /    │
-    │      '--'     │
-    │               │
-    │    DEBIAN     │
-    ╰───────────────╯
-ART
-                ;;
-            box)
-                cat << 'ART'
- ╔═════════════════════════╗
- ║                         ║
- ║         .--.            ║
- ║        /    \           ║
- ║       | .--. |          ║
- ║       | |  | |          ║
- ║       | \__/ |          ║
- ║        \    /           ║
- ║         '--'            ║
- ║                         ║
- ║        DEBIAN           ║
- ╚═════════════════════════╝
-ART
-                ;;
-            minimal)
-                cat << 'ART'
-  ┌─ DEBIAN ─────────────┐
-  │                       │
-  │        .--.           │
-  │       /    \          │
-  │      | .--. |         │
-  │      | |  | |         │
-  │      | \__/ |         │
-  │       \    /          │
-  │        '--'           │
-  └───────────────────────┘
-ART
+            compact|small)
+                cat << EOF
+${c2}       _,met\$\$\$\$gg.
+${c2}    ,g\$\$\$\$\$\$\$\$\$\$\$\$P.
+${c2}  ,g\$\$P"        """Y\$\$.".
+${c2} ,\$\$P'              \`\$\$\$.
+${c2}',\$\$P       ,ggs.     \`\$\$b:
+${c2}\`d\$\$'     ,\$P"'   ${c1}.${c2}    \$\$\$
+${c2} \$\$P      d\$'     ${c1},${c2}    \$\$P
+${c2} \$\$:      \$\$.   ${c1}-${c2}    ,d\$\$'
+${c2} \$\$;      Y\$b._   _,d\$P'
+${c2} Y\$\$$.    ${c1}\`.\${c2}.\`"Y\$\$\$P"'
+${c2} \`\$\$b      ${c1}"-.__
+${c2}  \`Y\$\$
+${c2}   \`Y\$\$.
+${c2}     \`\$\$b.
+${c2}       \`Y\$\$b.
+${c2}          \`"Y\$b._
+${c2}              \`"""\`
+${reset}EOF
                 ;;
             *)
-                cat << 'ART'
-                 ╭───────────────────────────────╮
-                 │                               │
-                 │           .--.                │
-                 │          /    \               │
-                 │         | .--. |              │
-                 │         | |  | |              │
-                 │         | \__/ |              │
-                 │          \    /               │
-                 │           '--'                │
-                 │                               │
-                 │          DEBIAN               │
-                 │         ── v2.0 ──            │
-                 │                               │
-                 ╰───────────────────────────────╯
-ART
+                cat << EOF
+${c2}       _,met\$\$\$\$gg.
+${c2}    ,g\$\$\$\$\$\$\$\$\$\$\$\$P.
+${c2}  ,g\$\$P"        """Y\$\$.".
+${c2} ,\$\$P'              \`\$\$\$.
+${c2}',\$\$P       ,ggs.     \`\$\$b:
+${c2}\`d\$\$'     ,\$P"'   ${c1}.${c2}    \$\$\$
+${c2} \$\$P      d\$'     ${c1},${c2}    \$\$P
+${c2} \$\$:      \$\$.   ${c1}-${c2}    ,d\$\$'
+${c2} \$\$;      Y\$b._   _,d\$P'
+${c2} Y\$\$$.    ${c1}\`.\${c2}.\`"Y\$\$\$P"'
+${c2} \`\$\$b      ${c1}"-.__
+${c2}  \`Y\$\$
+${c2}   \`Y\$\$.
+${c2}     \`\$\$b.
+${c2}       \`Y\$\$b.
+${c2}          \`"Y\$b._
+${c2}              \`"""\`
+${reset}EOF
                 ;;
         esac
         return
     fi
 
-    # ── Kali Linux Logo ──
-    if [[ "$distro_id" == "kali" ]]; then
-        case "$style" in
-            compact)
-                cat << 'ART'
-    ╭───────────────╮
-    │               │
-    │    /\    /\   │
-    │   /  \  /  \  │
-    │  / /\ \/ /\ \ │
-    │ / /  \/  \ \ \│
-    │/_/        \_\_│
-    │               │
-    │     KALI      │
-    ╰───────────────╯
-ART
-                ;;
-            *)
-                cat << 'ART'
-                 ╭───────────────────────────────╮
-                 │                               │
-                 │         /\    /\              │
-                 │        /  \  /  \             │
-                 │       / /\ \/ /\ \            │
-                 │      / /  \/  \ \ \           │
-                 │     /_/        \_\_           │
-                 │                               │
-                 │         KALI LINUX            │
-                 │         ── v2.0 ──            │
-                 │                               │
-                 ╰───────────────────────────────╯
-ART
-                ;;
-        esac
-        return
-    fi
-
-    # ── Linux Mint Logo ──
-    if [[ "$distro_id" == "linuxmint" ]] || [[ "$distro_id" == "lmde" ]]; then
-        case "$style" in
-            compact)
-                cat << 'ART'
-    ╭───────────────╮
-    │               │
-    │       __      │
-    │      /  |     │
-    │     | __ |    │
-    │      \__/     │
-    │               │
-    │     MINT      │
-    ╰───────────────╯
-ART
-                ;;
-            *)
-                cat << 'ART'
-                 ╭───────────────────────────────╮
-                 │                               │
-                 │            __                 │
-                 │           /  |                │
-                 │          | __ |               │
-                 │           \__/                │
-                 │                               │
-                 │          LINUX MINT           │
-                 │         ── v2.0 ──            │
-                 │                               │
-                 ╰───────────────────────────────╯
-ART
-                ;;
-        esac
-        return
-    fi
-
-    # ── Pop!_OS Logo ──
-    if [[ "$distro_id" == "pop" ]]; then
-        case "$style" in
-            compact)
-                cat << 'ART'
-    ╭───────────────╮
-    │               │
-    │    ______     │
-    │   / ____ \    │
-    │  / /    \ \   │
-    │ | |      | |  │
-    │  \ \    / /   │
-    │   \ \  / /    │
-    │    \ \/ /     │
-    │     \  /      │
-    │      \/       │
-    │    POP!_OS    │
-    ╰───────────────╯
-ART
-                ;;
-            *)
-                cat << 'ART'
-                 ╭───────────────────────────────╮
-                 │                               │
-                 │         ______               │
-                 │        / ____ \              │
-                 │       / /    \ \             │
-                 │      | |      | |            │
-                 │       \ \    / /             │
-                 │        \ \  / /              │
-                 │         \ \/ /               │
-                 │          \  /                │
-                 │           \/                 │
-                 │         POP!_OS              │
-                 │         ── v2.0 ──            │
-                 │                               │
-                 ╰───────────────────────────────╯
-ART
-                ;;
-        esac
-        return
-    fi
-
-    # ── Proxmox Logo ──
+    # ── Proxmox VE (real neofetch logo) ──
     if [[ "$distro_id" == "proxmox" ]] || [[ "$distro_id" == "proxmox-ve" ]]; then
         case "$style" in
-            compact)
-                cat << 'ART'
-    ╭───────────────╮
-    │               │
-    │    ┌──┐┌──┐   │
-    │    │▓▓││▓▓│   │
-    │    └──┘└──┘   │
-    │    ┌──┐┌──┐   │
-    │    │▓▓││▓▓│   │
-    │    └──┘└──┘   │
-    │               │
-    │   PROXMOX     │
-    ╰───────────────╯
-ART
+            compact|small)
+                cat << EOF
+${c1}         .://:\`              \`:://:.
+${c1}       \`hMMMMMMd/          /dMMMMMMh\`
+${c1}        \`sMMMMMMMd:      :mMMMMMMMs\`
+${c2}\`-/+oo+/:${c1}\`.yMMMMMMMh-  -hMMMMMMMy.\`${c2}:/+oo+/-\`
+${c2}\`:oooooooo/${c1}\`-hMMMMMMMyyMMMMMMMh-\`${c2}/oooooooo:\`
+${c2}  \`/oooooooo:${c1}\`:mMMMMMMMMMMMMm:\`${c2}:oooooooo/\`
+${c2}    ./ooooooo+-${c1} +NMMMMMMMMN+ ${c2}-+ooooooo/.
+${c2}      .+ooooooo+-${c1}\`oNMMMMNo\`${c2}-+ooooooo+.
+${c2}        -+ooooooo/.${c1}\`sMMs\`${c2}./ooooooo+-
+${c2}          :oooooooo/${c1}\`..\`${c2}/oooooooo:
+${c2}          :oooooooo/\`${c1}..\`${c2}\`/oooooooo:
+${c2}        -+ooooooo/.\`${c1}sMMs${c2}\`./ooooooo+-
+${c2}      .+ooooooo+-\`${c1}oNMMMMNo${c2}\`-+ooooooo+.
+${c2}    ./ooooooo+-${c1} +NMMMMMMMMN+ ${c2}-+ooooooo/.
+${c2}  \`/oooooooo:\`${c1}:mMMMMMMMMMMMMm:\`${c2}\`:oooooooo/\`
+${c2}\`:oooooooo/\`${c1}-hMMMMMMMyyMMMMMMMh-\`${c2}\`/oooooooo:\`
+${c2}\`-/+oo+/:${c1}\`.yMMMMMMMh-  -hMMMMMMMy.${c2}\`:/+oo+/-\`
+${c1}        \`sMMMMMMMm:      :dMMMMMMMs\`
+${c1}       \`hMMMMMMd/          /dMMMMMMh\`
+${c1}         \`://:\`              \`:://:\`
+${reset}EOF
+                ;;
+        esac
+        return
+    fi
+
+    # ── Kali Linux ──
+    if [[ "$distro_id" == "kali" ]]; then
+        case "$style" in
+            compact|small)
+                cat << 'EOF'
+    \         /
+     \  ___  /
+      \/   \/
+      /\   /\
+     /  \ /  \
+EOF
                 ;;
             *)
-                cat << 'ART'
-                 ╭───────────────────────────────╮
-                 │                               │
-                 │       ┌──┐  ┌──┐              │
-                 │       │▓▓│  │▓▓│              │
-                 │       └──┘  └──┘              │
-                 │       ┌──┐  ┌──┐              │
-                 │       │▓▓│  │▓▓│              │
-                 │       └──┘  └──┘              │
-                 │       ┌──┐  ┌──┐              │
-                 │       │▓▓│  │▓▓│              │
-                 │       └──┘  └──┘              │
-                 │                               │
-                 │        PROXMOX VE             │
-                 │         ── v2.0 ──            │
-                 │                               │
-                 ╰───────────────────────────────╯
-ART
+                cat << EOF
+${c1}            .-/+oossssoo+/-.
+${c1}        \`:+ssssssssssssssssss+:\`
+${c1}      -+ssssssssssssssssssyyssss+-
+${c1}    .ossssssssssssssssssdMMMNysssso.
+${c1}   /ssssssssssshdmmNNmmyNMMMMhssssss\\
+${c1}  +ssssssssshm${c2}hm${c1}MMMMMMMNddddyssssssss+
+${c1} /sssssssshN${c2}MM${c1}MMyhh${c2}hmNMM${c1}MNhssssssss\\
+${c1}.ssssssss${c2}d${c1}MMMNhsssssssssh${c2}N${c1}M${c2}M${c1}dssssssss.
+${c1}+ssss${c2}hhhy${c1}NMMNyssssssssss${c2}y${c1}N${c2}MM${c1}Mysssssss+
+${c1}oss${c2}yNMMNy${c1}MMhssssssssssss${c2}hmm${c1}mhsssssso
+${c1}oss${c2}yNMMNy${c1}MMhsssssssssssshmmmmhsssssso
+${c1}+ssss${c2}hhhy${c1}NMMNyssssssssss${c2}y${c1}N${c2}MM${c1}Mysssssss+
+${c1}.ssssssss${c2}d${c1}MMMNhsssssssssh${c2}N${c1}M${c2}M${c1}dssssssss.
+${c1} \\ssssssssh${c2}N${c1}MMMMyh${c2}hyyyyhd${c1}N${c2}MM${c1}MNhssssssss/
+${c1}  +ssssssss${c2}dm${c1}yd${c2}MMMMMMMMddddy${c1}ssssssss+
+${c1}   \\sssssssssshdmNNNNmyNMMMMhssssss/
+${c1}    .ossssssssssssssssssdMMMNysssso.
+${c1}      -+sssssssssssssssssyuuyssss+-
+${c1}        \`:+ssssssssssssssssss+:\`
+${c1}            .-\\+oossssoo+/-.
+${reset}EOF
+                ;;
+        esac
+        return
+    fi
+
+    # ── Linux Mint ──
+    if [[ "$distro_id" == "linuxmint" ]] || [[ "$distro_id" == "lmde" ]]; then
+        case "$style" in
+            compact|small)
+                cat << 'EOF'
+         __
+    ____/ /___  __  ______
+   / __  / __ \/ / / / _ \
+  / /_/ / /_/ / /_/ /  __/
+  \__,_/\____/\__,_/\___/
+EOF
+                ;;
+            *)
+                cat << 'EOF'
+         __
+    ____/ /___  __  ______
+   / __  / __ \/ / / / _ \
+  / /_/ / /_/ / /_/ /  __/
+  \__,_/\____/\__,_/\___/
+EOF
+                ;;
+        esac
+        return
+    fi
+
+    # ── Pop!_OS ──
+    if [[ "$distro_id" == "pop" ]]; then
+        case "$style" in
+            compact|small)
+                cat << 'EOF'
+         ______
+        / ____/___  _________
+       / /   / __ \/ ___/ __ \
+      / /___/ /_/ / /  / / / /
+      \____/\____/_/  /_/ /_/
+EOF
+                ;;
+            *)
+                cat << 'EOF'
+         ______
+        / ____/___  _________
+       / /   / __ \/ ___/ __ \
+      / /___/ /_/ / /  / / / /
+      \____/\____/_/  /_/ /_/
+EOF
                 ;;
         esac
         return
@@ -385,8 +298,8 @@ ART
 
     # ── Default: TECHNO Logo ──
     case "$style" in
-        compact)
-            cat << 'ART'
+        compact|small)
+            cat << 'EOF'
     ╭───────────────╮
     │               │
     │  ████████     │
@@ -397,35 +310,10 @@ ART
     │               │
     │   TECHNO      │
     ╰───────────────╯
-ART
-            ;;
-        box)
-            cat << 'ART'
- ╔═════════════════════════╗
- ║                         ║
- ║   ████████              ║
- ║   ██    ██              ║
- ║   ████████              ║
- ║        ██               ║
- ║   ████████              ║
- ║                         ║
- ║      TECHNO             ║
- ╚═════════════════════════╝
-ART
-            ;;
-        minimal)
-            cat << 'ART'
-  ┌─ TECHNO ─────────────┐
-  │                       │
-  │   ▓▓▓▓ ▓▓▓▓ ▓▓▓▓     │
-  │   ▓    ▓▓▓▓ ▓▓▓▓     │
-  │   ▓▓▓▓ ▓    ▓  ▓     │
-  │   ▓    ▓▓▓▓ ▓▓▓▓     │
-  └───────────────────────┘
-ART
+EOF
             ;;
         *)
-            cat << 'ART'
+            cat << 'EOF'
                  ╭───────────────────────────────╮
                  │                               │
                  │   ████████                    │
@@ -438,7 +326,7 @@ ART
                  │       ── v2.0 ──              │
                  │                               │
                  ╰───────────────────────────────╯
-ART
+EOF
             ;;
     esac
 }
