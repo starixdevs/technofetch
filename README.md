@@ -58,7 +58,7 @@ No Python. No compiled binaries. Just pure Bash that works everywhere.
                  │  ██╔══╝  ██╔══██╗██║      │  Kernel:        5.15.0-91-generic (x86_64)
                  │  ██║     ██║  ██║╚██████╗│  OS:            Ubuntu 22.04.4 LTS
                  │  ╚═╝     ╚═╝  ╚═╝ ╚═════╝│  Codename:      jammy
-                 │          FETCH             │  Hypervisor:    KVM/QEMU
+                 │          TECHNO            │  Hypervisor:    KVM/QEMU
                  │        ── v2.0 ──          │  Host/Brand:    QEMU Standard PC
                  ╰───────────────────────────╯
                                              │
@@ -107,7 +107,7 @@ No Python. No compiled binaries. Just pure Bash that works everywhere.
     │  ████████    │   Hypervisor     KVM/QEMU
     │       █      │   CPU            Intel Xeon Platinum 8375C
     │  ████████    │   Memory         45.2% │ 3617.4 / 7984.0 MiB
-    │  FETCH  v2   │   Disk (/)      12.4G / 49.1G (25% used)
+    │  TECHNO v2   │   Disk (/)      12.4G / 49.1G (25% used)
     └──────────────┘   Network        eth0 (10.0.2.15)
                        Packages       847 (apt/dpkg)
                        Uptime         3d 12h 45m
