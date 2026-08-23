@@ -72,8 +72,247 @@ COLOR_BLOCK="■ "
 ASCII_ART=""
 
 # ─── ASCII ART VARIANTS ────────────────────────────────────────────────────
+# Shows distro-specific logos (Ubuntu, Debian, etc.) with TECHNO fallback
 read_ascii_art() {
     local style="${1:-default}"
+    local distro_id="${2:-unknown}"
+    local distro_version="${3:-}"
+
+    # ── Ubuntu Logo (circle of friends) ──
+    if [[ "$distro_id" == "ubuntu" ]]; then
+        case "$style" in
+            compact)
+                cat << 'ART'
+    ╭───────────╮
+    │    _  _   │
+    │   | \/ |  │
+    │   |_/|/|  │
+    │   / __ |  │
+    │  /_/ \|   │
+    │          │
+    │  UBUNTU  │
+    ╰───────────╯
+ART
+                ;;
+            box)
+                cat << 'ART'
+ ╔═══════════════════════╗
+ ║    _  _               ║
+ ║   | \/ |              ║
+ ║   |_/|/|              ║
+ ║   / __ |              ║
+ ║  /_/ \|               ║
+ ║                       ║
+ ║     UBUNTU            ║
+ ╚═══════════════════════╝
+ART
+                ;;
+            minimal)
+                cat << 'ART'
+  ┌─ UBUNTU ─────────┐
+  │    _  _           │
+  │   | \/ |          │
+  │   |_/|/|          │
+  │   / __ |          │
+  │  /_/ \|           │
+  └───────────────────┘
+ART
+                ;;
+            *)
+                cat << 'ART'
+                 ╭───────────────────────────╮
+                 │                           │
+                 │         _  _              │
+                 │        | \/ |             │
+                 │        |_/|/|             │
+                 │        / __ |             │
+                 │       /_/ \|              │
+                 │                           │
+                 │         UBUNTU            │
+                 │        ── v2.0 ──         │
+                 │                           │
+                 ╰───────────────────────────╯
+ART
+                ;;
+        esac
+        return
+    fi
+
+    # ── Debian Logo (swirl) ──
+    if [[ "$distro_id" == "debian" ]] || [[ "$distro_id" == "ubuntu" && "$distro_id" != "debian" ]] || [[ "$distro_id" == "kali" ]] || [[ "$distro_id" == "parrot" ]]; then
+        if [[ "$distro_id" == "debian" ]]; then
+            case "$style" in
+                compact)
+                    cat << 'ART'
+    ╭───────────╮
+    │    .--.   │
+    │   /    \  │
+    │  | .--. | │
+    │  | |  | | │
+    │  | \__/ | │
+    │   \    /  │
+    │    '--'   │
+    │  DEBIAN   │
+    ╰───────────╯
+ART
+                    ;;
+                box)
+                    cat << 'ART'
+ ╔═══════════════════════╗
+ ║    .--.               ║
+ ║   /    \              ║
+ ║  | .--. |             ║
+ ║  | |  | |             ║
+ ║  | \__/ |             ║
+ ║   \    /              ║
+ ║    '--'               ║
+ ║      DEBIAN           ║
+ ╚═══════════════════════╝
+ART
+                    ;;
+                minimal)
+                    cat << 'ART'
+  ┌─ DEBIAN ─────────┐
+  │    .--.           │
+  │   /    \          │
+  │  | .--. |         │
+  │  | |  | |         │
+  │  | \__/ |         │
+  │   \    /          │
+  │    '--'           │
+  └───────────────────┘
+ART
+                    ;;
+                *)
+                    cat << 'ART'
+                 ╭───────────────────────────╮
+                 │                           │
+                 │         .--.              │
+                 │        /    \             │
+                 │       | .--. |            │
+                 │       | |  | |            │
+                 │       | \__/ |            │
+                 │        \    /             │
+                 │         '--'              │
+                 │                           │
+                 │         DEBIAN            │
+                 │        ── v2.0 ──         │
+                 │                           │
+                 ╰───────────────────────────╯
+ART
+                    ;;
+            esac
+            return
+        fi
+    fi
+
+    # ── Kali Linux Logo ──
+    if [[ "$distro_id" == "kali" ]]; then
+        case "$style" in
+            compact)
+                cat << 'ART'
+    ╭───────────╮
+    │    /\ /\  │
+    │   / / \ \ │
+    │  / /   \ \│
+    │ / / /\ \ \│
+    │/_/ /  \ \_│
+    │   /    \ │
+    │  / KALI \│
+    ╰───────────╯
+ART
+                ;;
+            *)
+                cat << 'ART'
+                 ╭───────────────────────────╮
+                 │                           │
+                 │         /\ /\             │
+                 │        / / \ \            │
+                 │       / /   \ \           │
+                 │      / / /\ \ \           │
+                 │     /_/ /  \ \_           │
+                 │        /    \             │
+                 │       / KALI  \           │
+                 │                           │
+                 ╰───────────────────────────╯
+ART
+                ;;
+        esac
+        return
+    fi
+
+    # ── Linux Mint Logo ──
+    if [[ "$distro_id" == "linuxmint" ]] || [[ "$distro_id" == "lmde" ]]; then
+        case "$style" in
+            compact)
+                cat << 'ART'
+    ╭───────────╮
+    │     __    │
+    │    /  |   │
+    │   | __ |  │
+    │    \__/   │
+    │           │
+    │    MINT   │
+    ╰───────────╯
+ART
+                ;;
+            *)
+                cat << 'ART'
+                 ╭───────────────────────────╮
+                 │                           │
+                 │            __             │
+                 │           /  |            │
+                 │          | __ |           │
+                 │           \__/            │
+                 │                           │
+                 │          MINT             │
+                 │         ── v2.0 ──        │
+                 │                           │
+                 ╰───────────────────────────╯
+ART
+                ;;
+        esac
+        return
+    fi
+
+    # ── Pop!_OS Logo ──
+    if [[ "$distro_id" == "pop" ]]; then
+        case "$style" in
+            compact)
+                cat << 'ART'
+    ╭───────────╮
+    │   _____   │
+    │  / ____|  │
+    │ | (___    │
+    │  \___ \   │
+    │  ____) |  │
+    │ |_____/   │
+    │   POP_OS  │
+    ╰───────────╯
+ART
+                ;;
+            *)
+                cat << 'ART'
+                 ╭───────────────────────────╮
+                 │                           │
+                 │        _____              │
+                 │       / ____|             │
+                 │      | (___               │
+                 │       \___ \              │
+                 │       ____) |             │
+                 │      |_____/              │
+                 │                           │
+                 │        POP!_OS            │
+                 │       ── v2.0 ──          │
+                 │                           │
+                 ╰───────────────────────────╯
+ART
+                ;;
+        esac
+        return
+    fi
+
+    # ── Default: TECHNO Logo (fallback for any unrecognized distro) ──
     case "$style" in
         compact)
             cat << 'ART'
@@ -1058,7 +1297,7 @@ main() {
     if [[ "$SHOW_ASCII" == "true" ]]; then
         while IFS= read -r line; do
             ascii_lines+=("$line")
-        done < <(read_ascii_art "$ASCII_STYLE")
+        done < <(read_ascii_art "$ASCII_STYLE" "$DISTRO_ID" "$DISTRO_VERSION")
     fi
 
     # ── Build info lines into array ──
