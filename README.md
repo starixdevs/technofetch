@@ -232,14 +232,14 @@ No Python. No compiled binaries. Just pure Bash that works everywhere.
 ### ⚡ One-Line Install (Recommended)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/technofetch.git && cd technofetch && sudo bash install.sh
+git clone https://github.com/starixdevs/technofetch.git && cd technofetch && sudo bash install.sh
 ```
 
 ### 📋 Manual Install
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/technofetch.git
+git clone https://github.com/starixdevs/technofetch.git
 cd technofetch
 
 # 2. Make scripts executable
@@ -601,7 +601,7 @@ We love contributions! Here's how to get started:
 
 ### 1. Fork & Clone
 ```bash
-git clone https://github.com/YOUR_USERNAME/technofetch.git
+git clone https://github.com/starixdevs/technofetch.git
 cd technofetch
 ```
 
