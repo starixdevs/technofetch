@@ -1,6 +1,6 @@
-# ⚡ Technofetch
+# ⚡ Technofetch Installation
 
-A neofetch alternative for VMs and VPS.
+A technofetch alternative for VMs and VPS.
 
 ## Install
 
@@ -25,7 +25,7 @@ sudo rm /usr/local/bin/technofetch
 
 ## Detects
 
-- **Hypervisors** — KVM, VMware, VirtualBox, Hyper-V, Xen, Parallels
+- **Hypervisors** — KVM, VMware, VirtualBox, Hyper-V, Xen, Parallels, Proxmox VE
 - **Cloud** — AWS, GCP, Azure, DigitalOcean, Linode, Hetzner, OCI
 - **Containers** — Docker, LXC/LXD, Podman, systemd-nspawn
 
