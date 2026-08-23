@@ -4,7 +4,7 @@
 # A powerful neofetch alternative for Ubuntu/Debian VM environments
 # Detects hypervisors, containers, cloud metadata, and deep system info
 # ============================================================================
-set -euo pipefail
+set -u
 
 # ─── VERSION ────────────────────────────────────────────────────────────────
 VERSION="2.0.0"

@@ -3,7 +3,7 @@
 # Technofetch Installer
 # Installs technofetch system-wide or locally
 # ============================================================================
-set -euo pipefail
+set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_NAME="technofetch"
