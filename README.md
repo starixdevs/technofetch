@@ -229,72 +229,18 @@ No Python. No compiled binaries. Just pure Bash that works everywhere.
 
 ## 📦 Installation
 
-### ⚡ One-Line Install (Recommended)
+### ⚡ One-Line Install
 
 ```bash
 git clone https://github.com/starixdevs/technofetch.git && cd technofetch && sudo bash install.sh
 ```
 
-### 📋 Manual Install
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/starixdevs/technofetch.git
-cd technofetch
-
-# 2. Make scripts executable
-chmod +x technofetch.sh install.sh uninstall.sh
-
-# 3. Install system-wide (requires sudo)
-sudo bash install.sh
-
-# 4. Run it!
-technofetch
-```
-
-### 🏠 Local Install (No Sudo)
-
-```bash
-bash install.sh --local
-# Installs to ~/.local/bin/ — no root needed
-```
-
-### 🔗 Quick Aliases
-
-Add these to your `~/.bashrc` or `~/.zshrc`:
-
-```bash
-# ─── Technofetch Aliases ───
-alias tf='technofetch'
-alias tfc='technofetch --style compact'
-alias tfm='technofetch --style minimal --no-blocks'
-alias tfb='technofetch --style box'
-alias tfn='technofetch --no-ascii'
-alias tfjson='technofetch --json 2>/dev/null | jq .'
-
-# Quick server info on SSH login
-echo "" && technofetch --style compact --no-blocks
-```
-
-### 🐚 Fish Shell
-
-```fish
-alias tf 'technofetch'
-alias tfc 'technofetch --style compact'
-```
-
-### ⬆️ Update
-
-```bash
-cd technofetch && git pull && sudo bash install.sh
-```
+That's it. Run `technofetch`.
 
 ### 🗑️ Uninstall
 
 ```bash
 sudo bash uninstall.sh
-# OR
-technofetch --uninstall  # (if integrated)
 ```
 
 ---
@@ -503,19 +449,10 @@ technofetch.sh
 
 ```
 technofetch/
-├── technofetch.sh     # 🎯 Main script (single file, ~40KB)
-│                      #    Contains all detection, display, and CLI logic
-│                      #    Zero external dependencies
-│
-├── install.sh         # 📦 Installer
-│                      #    --local    → ~/.local/bin/
-│                      #    (default) → /usr/local/bin/
-│                      #    Sets up PATH, creates tf symlink
-│
-├── uninstall.sh       # 🗑️  Clean uninstaller
-│                      #    Removes from all install locations
-│
-└── README.md          # 📖 This file
+├── technofetch.sh     # Main script (zero dependencies)
+├── install.sh         # Installer (sudo bash install.sh)
+├── uninstall.sh       # Uninstaller (sudo bash uninstall.sh)
+└── README.md          # This file
 ```
 
 ---

@@ -1201,14 +1201,50 @@ main() {
     info_lines+=("$(printf "${LABEL_COLOR}%-14s${C_RESET} ${C_DIM}%s${C_RESET}" "Boot Time" "$BOOT_TIME")")
 
     # ── Render side by side (ASCII left, info right) ──
+    #
+    # Strip ANSI escape codes and count display columns (not bytes!)
+    # Uses python3 if available, falls back to wc -m (characters)
+    visible_len() {
+        local s="$1"
+        if has_cmd python3; then
+            # Python handles ANSI stripping + Unicode display width correctly
+            python3 -c "
+import sys, re
+s = sys.argv[1]
+s = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', s)
+# Approximate: box-drawing chars = 1 col, CJK = 2 col, rest = 1 col
+total = 0
+for ch in s:
+    cp = ord(ch)
+    if cp > 0xFFFF: total += 2      # surrogate pair
+    elif (0x1100 <= cp <= 0x115F or
+          0x2E80 <= cp <= 0x303E or
+          0x3040 <= cp <= 0x9FFF or
+          0xAC00 <= cp <= 0xD7AF or
+          0xF900 <= cp <= 0xFAFF or
+          0xFE30 <= cp <= 0xFE4F or
+          0xFF01 <= cp <= 0xFF60 or
+          0xFFE0 <= cp <= 0xFFE6):
+        total += 2
+    else:
+        total += 1
+print(total)" "$s" 2>/dev/null
+        else
+            # Fallback: count characters (close enough for ASCII art)
+            echo "$s" | sed $'s/\x1b\[[0-9;]*[a-zA-Z]//g' | wc -m | tr -d ' '
+        fi
+    }
+
+    # Calculate the widest ASCII art line (display columns)
     local max_ascii=0
     for line in "${ascii_lines[@]}"; do
-        # Strip ANSI for length calculation
-        local stripped
-        stripped=$(echo "$line" | sed 's/\x1b\[[0-9;]*m//g')
-        local len=${#stripped}
-        (( len > max_ascii )) && max_ascii=$len
+        local vlen
+        vlen=$(visible_len "$line")
+        (( vlen > max_ascii )) && max_ascii=$vlen
     done
+    # Fixed column width: widest ASCII line + 3 char gap
+    local col_width=$(( max_ascii + 3 ))
+    (( col_width < 33 )) && col_width=33
 
     local total_info=${#info_lines[@]}
     local total_ascii=${#ascii_lines[@]}
@@ -1220,24 +1256,24 @@ main() {
         local ascii_part=""
         local info_part=""
 
-        # ASCII side
         if (( i < total_ascii )); then
             ascii_part="${ascii_lines[$i]}"
         fi
 
-        # Info side
         if (( i < total_info )); then
             info_part="${info_lines[$i]}"
         fi
 
-        if (( i == 0 )); then
-            # First line: print ASCII, then info right-aligned
-            local stripped
-            stripped=$(echo "$ascii_part" | sed 's/\x1b\[[0-9;]*m//g')
-            local pad=$((max_ascii - ${#stripped} + 3))
-            printf "%s%*s%s" "$ascii_part" "$pad" "" "$info_part"
+        # Build each line: ASCII art → calculated spaces → info text
+        if [[ -n "$ascii_part" ]]; then
+            local vlen
+            vlen=$(visible_len "$ascii_part")
+            local spaces=$(( col_width - vlen ))
+            (( spaces < 1 )) && spaces=1
+            printf '%s%*s%s' "$ascii_part" "$spaces" '' "$info_part"
         else
-            printf "%s%*s%s" "$ascii_part" $((max_ascii + 3)) "" "$info_part"
+            # No ASCII art — pad to info column start
+            printf '%*s%s' "$col_width" '' "$info_part"
         fi
         echo ""
     done
